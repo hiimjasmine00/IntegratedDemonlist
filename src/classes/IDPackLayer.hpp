@@ -1,4 +1,6 @@
 #include "../IntegratedDemonlist.hpp"
+#include <Geode/binding/SetIDPopupDelegate.hpp>
+#include <Geode/ui/TextInput.hpp>
 
 class IDPackLayer : public cocos2d::CCLayer, SetIDPopupDelegate {
 private:
@@ -38,8 +40,9 @@ protected:
     std::vector<IDDemonPack> m_fullSearchResults;
 
     bool init() override;
+    std::function<void(int)> failure();
     void addSearchBar();
     void showLoading();
-    void populateList(std::string query);
+    void populateList(const std::string& query);
     void setIDPopupClosed(SetIDPopup*, int) override;
 };

@@ -21,23 +21,22 @@ public:
     inline static bool AREDL_LOADED = false;
     inline static bool PEMONLIST_LOADED = false;
 
-    static void isOk(std::string const&, geode::EventListener<geode::utils::web::WebTask>&&, bool, std::function<void(bool, int)> const&);
     static void loadAREDL(
         geode::EventListener<geode::utils::web::WebTask>&&,
         geode::EventListener<geode::utils::web::WebTask>&&,
-        LoadingCircle*,
-        std::function<void()> const&
+        const std::function<void()>&,
+        const std::function<void(int)>&
     );
     static void loadAREDLPacks(
         geode::EventListener<geode::utils::web::WebTask>&&,
         geode::EventListener<geode::utils::web::WebTask>&&,
-        LoadingCircle*,
-        std::function<void()> const&
+        const std::function<void()>&,
+        const std::function<void(int)>&
     );
     static void loadPemonlist(
         geode::EventListener<geode::utils::web::WebTask>&&,
         geode::EventListener<geode::utils::web::WebTask>&&,
-        LoadingCircle*,
-        std::function<void()> const&
+        const std::function<void()>&,
+        const std::function<void(int)>&
     );
 };

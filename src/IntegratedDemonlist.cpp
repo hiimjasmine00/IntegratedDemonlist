@@ -1,13 +1,14 @@
 #include "IntegratedDemonlist.hpp"
+#include <Geode/utils/ranges.hpp>
 
 using namespace geode::prelude;
 
 #define AREDL_URL "https://api.aredl.net/api/aredl/levels"
 #define AREDL_PACKS_URL "https://api.aredl.net/api/aredl/packs"
 #define PEMONLIST_UPTIME_URL "https://pemonlist.com/api/uptime?version=2"
-#define PEMONLIST_URL "https://pemonlist.com/api/list?limit=500&version=2"
+#define PEMONLIST_URL "https://pemonlist.com/api/list?limit=150&version=2"
 
-void IntegratedDemonlist::isOk(std::string const& url, EventListener<web::WebTask>&& listenerRef, bool head, std::function<void(bool, int)> const& callback) {
+void isOk(const std::string& url, EventListener<web::WebTask>&& listenerRef, bool head, const std::function<void(bool, int)>& callback) {
     auto&& listener = std::move(listenerRef);
     listener.bind([callback](web::WebTask::Event* e) {
         if (auto res = e->getValue()) callback(res->ok(), res->code());
@@ -17,134 +18,108 @@ void IntegratedDemonlist::isOk(std::string const& url, EventListener<web::WebTas
 
 void IntegratedDemonlist::loadAREDL(
     EventListener<web::WebTask>&& listenerRef, EventListener<web::WebTask>&& okListener,
-    LoadingCircle* circle, std::function<void()> const& callback
+    const std::function<void()>& success, const std::function<void(int)>& failure
 ) {
     auto&& listener = std::move(listenerRef);
-    listener.bind([callback, circle](web::WebTask::Event* e) {
+    listener.bind([failure, success](web::WebTask::Event* e) {
         if (auto res = e->getValue()) {
-            if (!res->ok()) {
-                queueInMainThread([circle, res] {
-                    FLAlertLayer::create(fmt::format("Load Failed ({})", res->code()).c_str(), "Failed to load AREDL. Please try again later.", "OK")->show();
-                    circle->setVisible(false);
-                });
-                return;
-            }
+            if (!res->ok()) return failure(res->code());
 
             AREDL_LOADED = true;
             AREDL.clear();
             auto json = res->json().unwrapOr(matjson::Value());
-            if (json.isArray()) for (auto const& level : json.asArray().unwrap()) {
-                if (level.contains("legacy") && level["legacy"].isBool() && level["legacy"].asBool().unwrap()) continue;
-                if (!level.contains("level_id") || !level["level_id"].isNumber()) continue;
-                if (!level.contains("name") || !level["name"].isString()) continue;
-                if (!level.contains("position") || !level["position"].isNumber()) continue;
+            if (!json.isArray()) return success();
 
-                AREDL.push_back({
+            AREDL = ranges::map<std::vector<IDListDemon>>(ranges::filter(json.asArray().unwrap(), [](const matjson::Value& level) {
+                return (!level.contains("legacy") || !level["legacy"].isBool() || !level["legacy"].asBool().unwrap()) &&
+                    level.contains("level_id") && level["level_id"].isNumber() &&
+                    level.contains("name") && level["name"].isString() &&
+                    level.contains("position") && level["position"].isNumber();
+            }), [](const matjson::Value& level) {
+                return IDListDemon {
                     (int)level["level_id"].asInt().unwrap(),
                     level["name"].asString().unwrap(),
                     (int)level["position"].asInt().unwrap()
-                });
-            }
-            callback();
+                };
+            });
+            success();
         }
     });
 
-    isOk(AREDL_URL, std::move(okListener), true, [&listener, circle](bool ok, int code) {
+    isOk(AREDL_URL, std::move(okListener), true, [&listener, failure](bool ok, int code) {
         if (ok) listener.setFilter(web::WebRequest().get(AREDL_URL));
-        else queueInMainThread([circle, code] {
-            FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load AREDL. Please try again later.", "OK")->show();
-            circle->setVisible(false);
-        });
+        else failure(code);
     });
 }
 
 void IntegratedDemonlist::loadAREDLPacks(
     EventListener<web::WebTask>&& listenerRef, EventListener<web::WebTask>&& okListener,
-    LoadingCircle* circle, std::function<void()> const& callback
+    const std::function<void()>& success, const std::function<void(int)>& failure
 ) {
     auto&& listener = std::move(listenerRef);
-    listener.bind([callback, circle](web::WebTask::Event* e) {
+    listener.bind([failure, success](web::WebTask::Event* e) {
         if (auto res = e->getValue()) {
-            if (!res->ok()) {
-                queueInMainThread([circle, res] {
-                    FLAlertLayer::create(fmt::format("Load Failed ({})", res->code()).c_str(), "Failed to load AREDL packs. Please try again later.", "OK")->show();
-                    circle->setVisible(false);
-                });
-                return;
-            }
+            if (!res->ok()) return failure(res->code());
 
             AREDL_PACKS.clear();
             auto json = res->json().unwrapOr(matjson::Value());
-            if (json.isArray()) for (auto const& pack : json.asArray().unwrap()) {
-                if (!pack.contains("name") || !pack["name"].isString()) continue;
-                if (!pack.contains("points") || !pack["points"].isNumber()) continue;
-                if (!pack.contains("levels") || !pack["levels"].isArray()) continue;
+            if (!json.isArray()) return success();
 
-                std::vector<int> levels;
-                for (auto const& level : pack["levels"].asArray().unwrap()) {
-                    if (!level.contains("level_id") || !level["level_id"].isNumber()) continue;
-                    levels.push_back(level["level_id"].asInt().unwrap());
-                }
-                AREDL_PACKS.push_back({
+            AREDL_PACKS = ranges::map<std::vector<IDDemonPack>>(ranges::filter(json.asArray().unwrap(), [](const matjson::Value& pack) {
+                return pack.contains("name") && pack["name"].isString() &&
+                    pack.contains("points") && pack["points"].isNumber() &&
+                    pack.contains("levels") && pack["levels"].isArray();
+            }), [](const matjson::Value& pack) {
+                return IDDemonPack {
                     pack["name"].asString().unwrap(),
                     pack["points"].asDouble().unwrap(),
-                    levels
-                });
-            }
-            std::sort(AREDL_PACKS.begin(), AREDL_PACKS.end(), [](auto const& a, auto const& b) {
-                return a.points < b.points;
+                    ranges::map<std::vector<int>>(ranges::filter(pack["levels"].asArray().unwrap(), [](const matjson::Value& level) {
+                        return level.contains("level_id") && level["level_id"].isNumber();
+                    }), [](const matjson::Value& level) { return level["level_id"].asInt().unwrap(); })
+                };
             });
-            callback();
+            std::sort(AREDL_PACKS.begin(), AREDL_PACKS.end(), [](const IDDemonPack& a, const IDDemonPack& b) { return a.points < b.points; });
+            success();
         }
     });
 
-    isOk(AREDL_PACKS_URL, std::move(okListener), true, [&listener, circle](bool ok, int code) {
+    isOk(AREDL_PACKS_URL, std::move(okListener), true, [&listener, failure](bool ok, int code) {
         if (ok) listener.setFilter(web::WebRequest().get(AREDL_PACKS_URL));
-        else queueInMainThread([circle, code] {
-            FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load AREDL packs. Please try again later.", "OK")->show();
-            circle->setVisible(false);
-        });
+        else failure(code);
     });
 }
 
 void IntegratedDemonlist::loadPemonlist(
     EventListener<web::WebTask>&& listenerRef, EventListener<web::WebTask>&& okListener,
-    LoadingCircle* circle, std::function<void()> const& callback
+    const std::function<void()>& success, const std::function<void(int)>& failure
 ) {
     auto&& listener = std::move(listenerRef);
-    listener.bind([callback, circle](web::WebTask::Event* e) {
+    listener.bind([failure, success](web::WebTask::Event* e) {
         if (auto res = e->getValue()) {
-            if (!res->ok()) {
-                queueInMainThread([circle, res] {
-                    FLAlertLayer::create(fmt::format("Load Failed ({})", res->code()).c_str(), "Failed to load Pemonlist. Please try again later.", "OK")->show();
-                    circle->setVisible(false);
-                });
-                return;
-            }
+            if (!res->ok()) return failure(res->code());
 
             PEMONLIST_LOADED = true;
             PEMONLIST.clear();
             auto json = res->json().unwrapOr(matjson::Value());
-            if (json.isObject() && json.contains("data") && json["data"].isArray()) for (auto const& level : json["data"].asArray().unwrap()) {
-                if (!level.contains("level_id") || !level["level_id"].isNumber()) continue;
-                if (!level.contains("name") || !level["name"].isString()) continue;
-                if (!level.contains("placement") || !level["placement"].isNumber()) continue;
+            if (!json.isObject() || !json.contains("data") || !json["data"].isArray()) return success();
 
-                PEMONLIST.push_back({
+            PEMONLIST = ranges::map<std::vector<IDListDemon>>(ranges::filter(json["data"].asArray().unwrap(), [](const matjson::Value& level) {
+                return level.contains("level_id") && level["level_id"].isNumber() &&
+                    level.contains("name") && level["name"].isString() &&
+                    level.contains("placement") && level["placement"].isNumber();
+            }), [](const matjson::Value& level) {
+                return IDListDemon {
                     (int)level["level_id"].asInt().unwrap(),
                     level["name"].asString().unwrap(),
                     (int)level["placement"].asInt().unwrap()
-                });
-            }
-            callback();
+                };
+            });
+            success();
         }
     });
 
-    isOk(PEMONLIST_UPTIME_URL, std::move(okListener), false, [&listener, circle](bool ok, int code) {
+    isOk(PEMONLIST_UPTIME_URL, std::move(okListener), false, [&listener, failure](bool ok, int code) {
         if (ok) listener.setFilter(web::WebRequest().get(PEMONLIST_URL));
-        else queueInMainThread([circle, code] {
-            FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load Pemonlist. Please try again later.", "OK")->show();
-            circle->setVisible(false);
-        });
+        else failure(code);
     });
 }

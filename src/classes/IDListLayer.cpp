@@ -1,6 +1,15 @@
-#include <random>
-#include "../IntegratedDemonlist.hpp"
 #include "IDListLayer.hpp"
+#include "../IntegratedDemonlist.hpp"
+#include <Geode/binding/CustomListView.hpp>
+#include <Geode/binding/GameLevelManager.hpp>
+#include <Geode/binding/GJListLayer.hpp>
+#include <Geode/binding/GJSearchObject.hpp>
+#include <Geode/binding/InfoAlertButton.hpp>
+#include <Geode/binding/LoadingCircle.hpp>
+#include <Geode/binding/SetIDPopup.hpp>
+#include <Geode/loader/Mod.hpp>
+#include <Geode/utils/ranges.hpp>
+#include <random>
 
 using namespace geode::prelude;
 
@@ -89,9 +98,9 @@ bool IDListLayer::init() {
     auto refreshButton = CCMenuItemExt::createSpriteExtra(refreshBtnSpr, [this](auto) {
         showLoading();
         if (PEMONLIST) IntegratedDemonlist::loadPemonlist(std::move(m_pemonlistListener), std::move(m_pemonlistOkListener),
-            m_loadingCircle, [this] { populateList(m_query); });
+            [this] { populateList(m_query); }, failure(true));
         else IntegratedDemonlist::loadAREDL(std::move(m_aredlListener), std::move(m_aredlOkListener),
-            m_loadingCircle, [this] { populateList(m_query); });
+            [this] { populateList(m_query); }, failure(false));
     });
     refreshButton->setPosition({ winSize.width - refreshBtnSize.width / 2 - 4.0f, refreshBtnSize.height / 2 + 4.0f });
     menu->addChild(refreshButton, 2);
@@ -110,7 +119,8 @@ bool IDListLayer::init() {
         m_infoButton->m_description = AREDL_INFO;
         m_fullSearchResults.clear();
         if (IntegratedDemonlist::AREDL_LOADED) page(0);
-        else IntegratedDemonlist::loadAREDL(std::move(m_aredlListener), std::move(m_aredlOkListener), m_loadingCircle, [this] { page(0); });
+        else IntegratedDemonlist::loadAREDL(std::move(m_aredlListener), std::move(m_aredlOkListener),
+            [this] { page(0); }, failure(false));
     });
     m_starToggle->setPosition({ 30.0f, 60.0f });
     m_starToggle->setColor(PEMONLIST ? ccColor3B { 125, 125, 125 } : ccColor3B { 255, 255, 255 });
@@ -130,7 +140,8 @@ bool IDListLayer::init() {
         m_infoButton->m_description = PEMONLIST_INFO;
         m_fullSearchResults.clear();
         if (IntegratedDemonlist::PEMONLIST_LOADED) page(0);
-        else IntegratedDemonlist::loadPemonlist(std::move(m_pemonlistListener), std::move(m_pemonlistOkListener), m_loadingCircle, [this] { page(0); });
+        else IntegratedDemonlist::loadPemonlist(std::move(m_pemonlistListener), std::move(m_pemonlistOkListener),
+            [this] { page(0); }, failure(true));
     });
     m_moonToggle->setPosition({ 60.0f, 60.0f });
     m_moonToggle->setColor(PEMONLIST ? ccColor3B { 255, 255, 255 } : ccColor3B { 125, 125, 125 });
@@ -192,12 +203,20 @@ bool IDListLayer::init() {
 
     if (PEMONLIST) {
         if (IntegratedDemonlist::PEMONLIST_LOADED) populateList("");
-        else IntegratedDemonlist::loadPemonlist(std::move(m_pemonlistListener), std::move(m_pemonlistOkListener), m_loadingCircle, [this] { populateList(""); });
+        else IntegratedDemonlist::loadPemonlist(std::move(m_pemonlistListener), std::move(m_pemonlistOkListener), [this] { populateList(""); }, failure(true));
     }
     else if (IntegratedDemonlist::AREDL_LOADED) populateList("");
-    else IntegratedDemonlist::loadAREDL(std::move(m_aredlListener), std::move(m_aredlOkListener), m_loadingCircle, [this] { populateList(""); });
+    else IntegratedDemonlist::loadAREDL(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] { populateList(""); }, failure(false));
 
     return true;
+}
+
+std::function<void(int)> IDListLayer::failure(bool pemonlist) {
+    auto failedString = pemonlist ? "Failed to load Pemonlist. Please try again later." : "Failed to load AREDL. Please try again later.";
+    return [this, failedString](int code) {
+        FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), failedString, "OK")->show();
+        m_loadingCircle->setVisible(false);
+    };
 }
 
 void IDListLayer::addSearchBar() {
@@ -227,7 +246,7 @@ void IDListLayer::addSearchBar() {
     m_searchBar->getInputNode()->setLabelPlaceholderScale(0.53f);
     m_searchBar->getInputNode()->setMaxLabelScale(0.53f);
     m_searchBar->setScale(0.75f);
-    m_searchBar->setCallback([this](std::string const& text) { m_searchBarText = text; });
+    m_searchBar->setCallback([this](const std::string& text) { m_searchBarText = text; });
     m_searchBarMenu->addChild(m_searchBar);
 }
 
@@ -245,20 +264,10 @@ void IDListLayer::showLoading() {
     m_randomButton->setVisible(false);
 }
 
-void IDListLayer::populateList(std::string query) {
-    m_fullSearchResults.clear();
-
-    auto& list = PEMONLIST ? IntegratedDemonlist::PEMONLIST : IntegratedDemonlist::AREDL;
-    if (!query.empty()) {
-        auto queryLowercase = string::toLower(query);
-        for (auto const& level : list) {
-            if (string::contains(string::toLower(level.name), queryLowercase)) m_fullSearchResults.push_back(std::to_string(level.id));
-        }
-    } else {
-        for (auto const& level : list) {
-            m_fullSearchResults.push_back(std::to_string(level.id));
-        }
-    }
+void IDListLayer::populateList(const std::string& query) {
+    m_fullSearchResults = ranges::map<std::vector<std::string>>(ranges::filter(PEMONLIST ? IntegratedDemonlist::PEMONLIST : IntegratedDemonlist::AREDL,
+        [&query](const IDListDemon& level) { return query.empty() || string::contains(string::toLower(std::to_string(level.id)), string::toLower(query)); }),
+        [](const IDListDemon& level) { return std::to_string(level.id); });
 
     m_query = query;
 
@@ -320,14 +329,14 @@ void IDListLayer::setupPageInfo(gd::string, const char*) {
 void IDListLayer::search() {
     if (m_query != m_searchBarText) {
         showLoading();
-        if (PEMONLIST) IntegratedDemonlist::loadPemonlist(std::move(m_pemonlistListener), std::move(m_pemonlistOkListener), m_loadingCircle, [this] {
+        if (PEMONLIST) IntegratedDemonlist::loadPemonlist(std::move(m_pemonlistListener), std::move(m_pemonlistOkListener), [this] {
             m_page = 0;
             populateList(m_searchBarText);
-        });
-        else IntegratedDemonlist::loadAREDL(std::move(m_aredlListener), std::move(m_aredlOkListener), m_loadingCircle, [this] {
+        }, failure(true));
+        else IntegratedDemonlist::loadAREDL(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] {
             m_page = 0;
             populateList(m_searchBarText);
-        });
+        }, failure(false));
     }
 }
 

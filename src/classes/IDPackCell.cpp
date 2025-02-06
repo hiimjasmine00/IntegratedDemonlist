@@ -1,8 +1,16 @@
 #include "IDPackCell.hpp"
+#include <Geode/binding/ButtonSprite.hpp>
+#include <Geode/binding/GameStatsManager.hpp>
+#include <Geode/binding/GJSearchObject.hpp>
+#include <Geode/binding/LevelBrowserLayer.hpp>
+#include <Geode/Enums.hpp>
+#include <Geode/utils/cocos.hpp>
+#include <Geode/utils/ranges.hpp>
+#include <Geode/utils/string.hpp>
 
 using namespace geode::prelude;
 
-IDPackCell* IDPackCell::create(IDDemonPack pack) {
+IDPackCell* IDPackCell::create(const IDDemonPack& pack) {
     auto ret = new IDPackCell();
     if (ret->init(pack)) {
         ret->autorelease();
@@ -12,7 +20,7 @@ IDPackCell* IDPackCell::create(IDDemonPack pack) {
     return nullptr;
 }
 
-bool IDPackCell::init(IDDemonPack pack) {
+bool IDPackCell::init(const IDDemonPack& pack) {
     if (!CCLayer::init()) return false;
 
     auto winSize = CCDirector::get()->getWinSize();
@@ -30,10 +38,8 @@ bool IDPackCell::init(IDDemonPack pack) {
     auto viewSprite = ButtonSprite::create("View", 50, 0, 0.6f, false, "bigFont.fnt", "GJ_button_01.png", 50.0f);
     auto viewMenu = CCMenu::create();
     viewMenu->addChild(CCMenuItemExt::createSpriteExtra(viewSprite, [this, pack](auto) {
-        std::vector<std::string> levels;
-        for (auto level : pack.levels) levels.push_back(std::to_string(level));
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f,
-            LevelBrowserLayer::scene(GJSearchObject::create(SearchType::MapPackOnClick, string::join(levels, ",")))));
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelBrowserLayer::scene(GJSearchObject::create(SearchType::MapPackOnClick,
+            string::join(ranges::map<std::vector<std::string>>(pack.levels, [](auto level) { return std::to_string(level); }), ",")))));
     }));
     viewMenu->setPosition({ 347.0f - viewSprite->getContentWidth() / 2, 50.0f });
     addChild(viewMenu);
@@ -54,7 +60,7 @@ bool IDPackCell::init(IDDemonPack pack) {
     auto rect = progressBar->getTextureRect();
     progressBar->setPosition({ rect.size.width * 0.0075f, progressBackground->getContentHeight() / 2 });
     auto gsm = GameStatsManager::get();
-    auto completed = std::count_if(pack.levels.begin(), pack.levels.end(), [gsm](auto& level) { return gsm->hasCompletedOnlineLevel(level); });
+    auto completed = ranges::filter(pack.levels, [gsm](int level) { return gsm->hasCompletedOnlineLevel(level); }).size();
     progressBar->setTextureRect({ rect.origin.x, rect.origin.y, rect.size.width * (completed / (float)pack.levels.size()), rect.size.height });
     progressBackground->addChild(progressBar, 1);
 

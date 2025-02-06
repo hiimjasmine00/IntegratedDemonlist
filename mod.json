@@ -1,14 +1,14 @@
 {
-    "geode": "4.0.0-beta.1",
+    "geode": "4.2.0",
     "gd": {
         "android": "2.2074",
         "win": "2.2074",
         "mac": "2.2074"
     },
-    "version": "v1.7.2",
+    "version": "v1.7.3",
     "id": "hiimjustin000.integrated_demonlist",
     "name": "Integrated Demonlist",
-    "developer": "hiimjustin000",
+    "developer": "hiimjasmine00",
     "description": "A mod that integrates aredl.net and pemonlist.com into Geometry Dash.",
     "resources": {
         "sprites": [
@@ -26,19 +26,16 @@
             "name": "White Demon Ranking Text",
             "description": "Whether or not to display the demon ranking text in white.",
             "type": "bool",
+            "enable-if": "enable-rank",
             "default": false
         }
     },
-    "dependencies": [
-        {
-            "id": "geode.node-ids",
-            "version": ">=v1.12.0",
-            "importance": "required"
-        }
-    ],
+    "dependencies": {
+        "geode.node-ids": ">=v1.12.0"
+    },
     "links": {
         "community": "https://discord.gg/QVKmbvBXA7",
-        "source": "https://github.com/hiimjustin000/IntegratedDemonlist",
+        "source": "https://github.com/hiimjasmine00/IntegratedDemonlist",
         "homepage": "https://www.hiimjustin000.com"
     },
     "tags": [

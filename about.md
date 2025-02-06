@@ -10,6 +10,6 @@ A mod that integrates [aredl.net](https://aredl.net) and [pemonlist.com](https:/
 - Text on a demon's search box that states its position on the list (If on the list and the text is enabled in the mod settings)
 
 # Gallery
-![AREDL](hiimjustin000.integrated_demonlist/aredl.png?scale=0.625)\
-![Pemonlist](hiimjustin000.integrated_demonlist/pemonlist.png?scale=0.625)\
-![AREDL Packs](hiimjustin000.integrated_demonlist/aredl-packs.png?scale=0.625)
+![AREDL](hiimjustin000.integrated_demonlist/aredl.png?width=320)\
+![Pemonlist](hiimjustin000.integrated_demonlist/pemonlist.png?width=320)\
+![AREDL Packs](hiimjustin000.integrated_demonlist/aredl-packs.png?width=320)

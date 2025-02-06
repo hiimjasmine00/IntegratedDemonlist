@@ -1,8 +1,9 @@
 #include "../IntegratedDemonlist.hpp"
+#include <cocos2d.h>
 
 class IDPackCell : public cocos2d::CCLayer {
 public:
-    static IDPackCell* create(IDDemonPack);
+    static IDPackCell* create(const IDDemonPack&);
 protected:
-    bool init(IDDemonPack);
+    bool init(const IDDemonPack&);
 };

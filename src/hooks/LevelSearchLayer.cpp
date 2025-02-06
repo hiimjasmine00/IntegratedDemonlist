@@ -1,8 +1,9 @@
 #include "../classes/IDListLayer.hpp"
+#include <Geode/modify/LevelSearchLayer.hpp>
+#include <Geode/ui/BasedButtonSprite.hpp>
 
 using namespace geode::prelude;
 
-#include <Geode/modify/LevelSearchLayer.hpp>
 class $modify(IDLevelSearchLayer, LevelSearchLayer) {
     bool init(int searchType) {
         if (!LevelSearchLayer::init(searchType)) return false;

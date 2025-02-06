@@ -1,3 +1,6 @@
+#include <Geode/binding/SetIDPopupDelegate.hpp>
+#include <Geode/binding/LevelManagerDelegate.hpp>
+#include <Geode/ui/TextInput.hpp>
 #include <Geode/utils/web.hpp>
 
 class IDListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
@@ -7,7 +10,7 @@ private:
         "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) is an <cp>unofficial ranking</c> of all rated <cj>classic mode</c> <cr>extreme demons</c> in Geometry Dash.\n"
         "It is managed by <cy>Padahk</c> and <cy>ley</c>.";
     inline static const char* PEMONLIST_INFO =
-        "The <cg>Pemonlist</c> is an <cp>unofficial ranking</c> of all rated <cj>platformer mode</c> <cr>demons</c> in Geometry Dash.\n"
+        "The <cg>Pemonlist</c> is an <cp>unofficial ranking</c> of the top 150 <cj>platformer mode</c> <cr>demons</c> in Geometry Dash.\n"
         "It is managed by <cy>camila314</c>, <cy>Extatica</c>, <cy>IvanCrafter026</c>, <cy>Megu</c>, and <cy>Voiddle</c>.";
 public:
     static IDListLayer* create();
@@ -47,9 +50,10 @@ protected:
     std::vector<std::string> m_fullSearchResults;
 
     bool init() override;
+    std::function<void(int)> failure(bool);
     void addSearchBar();
     void showLoading();
-    void populateList(std::string query);
+    void populateList(const std::string& query);
     void loadLevelsFinished(cocos2d::CCArray*, const char*) override;
     void loadLevelsFailed(const char*) override;
     void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override {

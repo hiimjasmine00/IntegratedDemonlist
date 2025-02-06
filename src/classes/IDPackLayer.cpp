@@ -1,6 +1,13 @@
-#include <random>
-#include "IDPackCell.hpp"
 #include "IDPackLayer.hpp"
+#include "IDPackCell.hpp"
+#include <Geode/binding/GJListLayer.hpp>
+#include <Geode/binding/InfoAlertButton.hpp>
+#include <Geode/binding/LoadingCircle.hpp>
+#include <Geode/binding/SetIDPopup.hpp>
+#include <Geode/loader/Mod.hpp>
+#include <Geode/ui/ListView.hpp>
+#include <Geode/utils/ranges.hpp>
+#include <random>
 
 using namespace geode::prelude;
 
@@ -87,8 +94,7 @@ bool IDPackLayer::init() {
     auto& refreshBtnSize = refreshBtnSpr->getContentSize();
     auto refreshButton = CCMenuItemExt::createSpriteExtra(refreshBtnSpr, [this](auto) {
         showLoading();
-        IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener),
-            m_loadingCircle, [this] { populateList(m_query); });
+        IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] { populateList(m_query); }, failure());
     });
     refreshButton->setPosition(winSize.width - refreshBtnSize.width / 2 - 4.0f, refreshBtnSize.height / 2 + 4.0f);
     menu->addChild(refreshButton, 2);
@@ -148,9 +154,16 @@ bool IDPackLayer::init() {
     setKeyboardEnabled(true);
 
     if (!IntegratedDemonlist::AREDL_PACKS.empty()) populateList("");
-    else IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), m_loadingCircle, [this] { populateList(""); });
+    else IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] { populateList(""); }, failure());
 
     return true;
+}
+
+std::function<void(int)> IDPackLayer::failure() {
+    return [this](int code) {
+        FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load AREDL packs. Please try again later.", "OK")->show();
+        m_loadingCircle->setVisible(false);
+    };
 }
 
 void IDPackLayer::addSearchBar() {
@@ -180,7 +193,7 @@ void IDPackLayer::addSearchBar() {
     m_searchBar->getInputNode()->setLabelPlaceholderScale(0.53f);
     m_searchBar->getInputNode()->setMaxLabelScale(0.53f);
     m_searchBar->setScale(0.75f);
-    m_searchBar->setCallback([this](std::string const& text) { m_searchBarText = text; });
+    m_searchBar->setCallback([this](const std::string& text) { m_searchBarText = text; });
     m_searchBarMenu->addChild(m_searchBar);
 }
 
@@ -198,19 +211,10 @@ void IDPackLayer::showLoading() {
     m_randomButton->setVisible(false);
 }
 
-void IDPackLayer::populateList(std::string query) {
-    m_fullSearchResults.clear();
-
-    if (!query.empty()) {
-        auto queryLowercase = string::toLower(query);
-        for (auto const& pack : IntegratedDemonlist::AREDL_PACKS) {
-            if (string::contains(string::toLower(pack.name), queryLowercase)) m_fullSearchResults.push_back(pack);
-        }
-    } else {
-        for (auto const& pack : IntegratedDemonlist::AREDL_PACKS) {
-            m_fullSearchResults.push_back(pack);
-        }
-    }
+void IDPackLayer::populateList(const std::string& query) {
+    m_fullSearchResults = ranges::filter(IntegratedDemonlist::AREDL_PACKS, [&query](const IDDemonPack& pack) {
+        return query.empty() || string::contains(string::toLower(pack.name), string::toLower(query));
+    });
 
     m_query = query;
 
@@ -220,7 +224,7 @@ void IDPackLayer::populateList(std::string query) {
     auto start = m_page * 10;
     auto end = std::min((int)m_fullSearchResults.size(), (m_page + 1) * 10);
     auto searchResults = std::vector<IDDemonPack>(m_fullSearchResults.begin() + start, m_fullSearchResults.begin() + end);
-    for (auto const& pack : searchResults) {
+    for (const auto& pack : searchResults) {
         packs->addObject(IDPackCell::create(pack));
     }
     m_list = GJListLayer::create(ListView::create(packs, 100.0f, 356.0f, 190.0f), "AREDL Packs", { 0, 0, 0, 180 }, 356.0f, 220.0f, 0);
@@ -247,10 +251,10 @@ void IDPackLayer::populateList(std::string query) {
 void IDPackLayer::search() {
     if (m_query != m_searchBarText) {
         showLoading();
-        IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), m_loadingCircle,  [this] {
+        IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] {
             m_page = 0;
             populateList(m_searchBarText);
-        });
+        }, failure());
     }
 }
 
