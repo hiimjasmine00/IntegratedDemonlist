@@ -1,6 +1,7 @@
 # Integrated Demonlist Changelog
-## v1.7.3 (2025-02-06)
+## v1.7.3 (2025-02-07)
 - Reduced Pemonlist size to 150 demons
+- Added node IDs to the list pages
 
 ## v1.7.2 (2024-11-15)
 - Ported to Geode v4.0.0-beta.1

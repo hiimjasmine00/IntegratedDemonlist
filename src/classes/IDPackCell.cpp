@@ -23,25 +23,31 @@ IDPackCell* IDPackCell::create(const IDDemonPack& pack) {
 bool IDPackCell::init(const IDDemonPack& pack) {
     if (!CCLayer::init()) return false;
 
+    setID("IDPackCell");
     auto winSize = CCDirector::get()->getWinSize();
 
     auto difficultySprite = CCSprite::createWithSpriteFrameName("difficulty_10_btn_001.png");
     difficultySprite->setPosition({ 31.0f, 50.0f });
     difficultySprite->setScale(1.1f);
+    difficultySprite->setID("difficulty-sprite");
     addChild(difficultySprite, 2);
 
     auto nameLabel = CCLabelBMFont::create(pack.name.c_str(), "bigFont.fnt");
     nameLabel->setPosition({ 162.0f, 80.0f });
     nameLabel->limitLabelWidth(205.0f, 0.9f, 0.0f);
+    nameLabel->setID("name-label");
     addChild(nameLabel);
 
     auto viewSprite = ButtonSprite::create("View", 50, 0, 0.6f, false, "bigFont.fnt", "GJ_button_01.png", 50.0f);
     auto viewMenu = CCMenu::create();
-    viewMenu->addChild(CCMenuItemExt::createSpriteExtra(viewSprite, [this, pack](auto) {
+    auto viewButton = CCMenuItemExt::createSpriteExtra(viewSprite, [this, pack](auto) {
         CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelBrowserLayer::scene(GJSearchObject::create(SearchType::MapPackOnClick,
             string::join(ranges::map<std::vector<std::string>>(pack.levels, [](auto level) { return std::to_string(level); }), ",")))));
-    }));
+    });
+    viewButton->setID("view-button");
+    viewMenu->addChild(viewButton);
     viewMenu->setPosition({ 347.0f - viewSprite->getContentWidth() / 2, 50.0f });
+    viewMenu->setID("view-menu");
     addChild(viewMenu);
 
     auto progressBackground = CCSprite::create("GJ_progressBar_001.png");
@@ -50,6 +56,7 @@ bool IDPackCell::init(const IDDemonPack& pack) {
     progressBackground->setScaleX(0.6f);
     progressBackground->setScaleY(0.8f);
     progressBackground->setPosition({ 164.0f, 48.0f });
+    progressBackground->setID("progress-background");
     addChild(progressBackground, 3);
 
     auto progressBar = CCSprite::create("GJ_progressBar_001.png");
@@ -62,22 +69,26 @@ bool IDPackCell::init(const IDDemonPack& pack) {
     auto gsm = GameStatsManager::get();
     auto completed = ranges::filter(pack.levels, [gsm](int level) { return gsm->hasCompletedOnlineLevel(level); }).size();
     progressBar->setTextureRect({ rect.origin.x, rect.origin.y, rect.size.width * (completed / (float)pack.levels.size()), rect.size.height });
+    progressBar->setID("progress-bar");
     progressBackground->addChild(progressBar, 1);
 
     auto progressLabel = CCLabelBMFont::create(fmt::format("{}/{}", completed, pack.levels.size()).c_str(), "bigFont.fnt");
     progressLabel->setPosition({ 164.0f, 48.0f });
     progressLabel->setScale(0.5f);
+    progressLabel->setID("progress-label");
     addChild(progressLabel, 4);
 
     auto pointsLabel = CCLabelBMFont::create(fmt::format("{} Points", pack.points).c_str(), "bigFont.fnt");
     pointsLabel->setPosition({ 164.0f, 20.0f });
     pointsLabel->setScale(0.7f);
     pointsLabel->setColor({ 255, 255, (unsigned char)(completed >= pack.levels.size() ? 50 : 255) });
+    pointsLabel->setID("points-label");
     addChild(pointsLabel, 1);
 
     if (completed >= pack.levels.size()) {
         auto completedSprite = CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png");
         completedSprite->setPosition({ 250.0f, 49.0f });
+        completedSprite->setID("completed-sprite");
         addChild(completedSprite, 5);
     }
 
