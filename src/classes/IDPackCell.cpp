@@ -10,9 +10,9 @@
 
 using namespace geode::prelude;
 
-IDPackCell* IDPackCell::create(const IDDemonPack& pack) {
+IDPackCell* IDPackCell::create(const std::string& name, double points, const std::vector<int>& levels) {
     auto ret = new IDPackCell();
-    if (ret->init(pack)) {
+    if (ret->init(name, points, levels)) {
         ret->autorelease();
         return ret;
     }
@@ -20,7 +20,7 @@ IDPackCell* IDPackCell::create(const IDDemonPack& pack) {
     return nullptr;
 }
 
-bool IDPackCell::init(const IDDemonPack& pack) {
+bool IDPackCell::init(const std::string& name, double points, const std::vector<int>& levels) {
     if (!CCLayer::init()) return false;
 
     setID("IDPackCell");
@@ -32,7 +32,7 @@ bool IDPackCell::init(const IDDemonPack& pack) {
     difficultySprite->setID("difficulty-sprite");
     addChild(difficultySprite, 2);
 
-    auto nameLabel = CCLabelBMFont::create(pack.name.c_str(), "bigFont.fnt");
+    auto nameLabel = CCLabelBMFont::create(name.c_str(), "bigFont.fnt");
     nameLabel->setPosition({ 162.0f, 80.0f });
     nameLabel->limitLabelWidth(205.0f, 0.9f, 0.0f);
     nameLabel->setID("name-label");
@@ -40,13 +40,13 @@ bool IDPackCell::init(const IDDemonPack& pack) {
 
     auto viewSprite = ButtonSprite::create("View", 50, 0, 0.6f, false, "bigFont.fnt", "GJ_button_01.png", 50.0f);
     auto viewMenu = CCMenu::create();
-    auto viewButton = CCMenuItemExt::createSpriteExtra(viewSprite, [this, pack](auto) {
+    auto viewButton = CCMenuItemExt::createSpriteExtra(viewSprite, [this, levels](auto) {
         CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelBrowserLayer::scene(GJSearchObject::create(SearchType::MapPackOnClick,
-            string::join(ranges::map<std::vector<std::string>>(pack.levels, [](auto level) { return std::to_string(level); }), ",")))));
+            string::join(ranges::map<std::vector<std::string>>(levels, [](int level) { return std::to_string(level); }), ",")))));
     });
     viewButton->setID("view-button");
     viewMenu->addChild(viewButton);
-    viewMenu->setPosition({ 347.0f - viewSprite->getContentWidth() / 2, 50.0f });
+    viewMenu->setPosition({ 347.0f - viewSprite->getContentWidth() / 2.0f, 50.0f });
     viewMenu->setID("view-menu");
     addChild(viewMenu);
 
@@ -65,27 +65,27 @@ bool IDPackCell::init(const IDDemonPack& pack) {
     progressBar->setScaleY(0.83f);
     progressBar->setAnchorPoint({ 0.0f, 0.5f });
     auto rect = progressBar->getTextureRect();
-    progressBar->setPosition({ rect.size.width * 0.0075f, progressBackground->getContentHeight() / 2 });
+    progressBar->setPosition({ rect.size.width * 0.0075f, progressBackground->getContentHeight() / 2.0f });
     auto gsm = GameStatsManager::get();
-    auto completed = ranges::filter(pack.levels, [gsm](int level) { return gsm->hasCompletedOnlineLevel(level); }).size();
-    progressBar->setTextureRect({ rect.origin.x, rect.origin.y, rect.size.width * (completed / (float)pack.levels.size()), rect.size.height });
+    auto completed = std::ranges::count_if(levels, [gsm](int level) { return gsm->hasCompletedOnlineLevel(level); });
+    progressBar->setTextureRect({ rect.origin.x, rect.origin.y, rect.size.width * (completed / (float)levels.size()), rect.size.height });
     progressBar->setID("progress-bar");
     progressBackground->addChild(progressBar, 1);
 
-    auto progressLabel = CCLabelBMFont::create(fmt::format("{}/{}", completed, pack.levels.size()).c_str(), "bigFont.fnt");
+    auto progressLabel = CCLabelBMFont::create(fmt::format("{}/{}", completed, levels.size()).c_str(), "bigFont.fnt");
     progressLabel->setPosition({ 164.0f, 48.0f });
     progressLabel->setScale(0.5f);
     progressLabel->setID("progress-label");
     addChild(progressLabel, 4);
 
-    auto pointsLabel = CCLabelBMFont::create(fmt::format("{} Points", pack.points).c_str(), "bigFont.fnt");
+    auto pointsLabel = CCLabelBMFont::create(fmt::format("{} Points", points).c_str(), "bigFont.fnt");
     pointsLabel->setPosition({ 164.0f, 20.0f });
     pointsLabel->setScale(0.7f);
-    pointsLabel->setColor({ 255, 255, (unsigned char)(completed >= pack.levels.size() ? 50 : 255) });
+    pointsLabel->setColor({ 255, 255, (uint8_t)(255 - (completed >= levels.size()) * 205) });
     pointsLabel->setID("points-label");
     addChild(pointsLabel, 1);
 
-    if (completed >= pack.levels.size()) {
+    if (completed >= levels.size()) {
         auto completedSprite = CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png");
         completedSprite->setPosition({ 250.0f, 49.0f });
         completedSprite->setID("completed-sprite");

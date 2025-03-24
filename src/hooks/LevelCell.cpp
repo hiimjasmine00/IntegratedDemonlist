@@ -17,36 +17,43 @@ class $modify(IDLevelCell, LevelCell) {
     };
 
     static void onModify(ModifyBase<ModifyDerive<IDLevelCell, LevelCell>>& self) {
-        auto hookRes = self.getHook("LevelCell::loadCustomLevelCell");
-        if (hookRes.isErr()) return log::error("Failed to get LevelCell::loadCustomLevelCell hook: {}", hookRes.unwrapErr());
+        (void)self.setHookPriorityAfterPost("LevelCell::loadFromLevel", "hiimjustin000.level_size");
 
-        auto hook = hookRes.unwrap();
-        hook->setAutoEnable(Mod::get()->getSettingValue<bool>("enable-rank"));
+        auto hook = self.getHook("LevelCell::loadFromLevel").mapErr([](std::string const& err) {
+            return log::error("Failed to get LevelCell::loadFromLevel hook: {}", err), err;
+        }).unwrapOr(nullptr);
+        if (!hook) return;
+
+        auto mod = Mod::get();
+        hook->setAutoEnable(mod->getSettingValue<bool>("enable-rank"));
 
         listenForSettingChanges<bool>("enable-rank", [hook](bool value) {
-            auto changeRes = value ? hook->enable() : hook->disable();
-            if (changeRes.isErr()) log::error("Failed to {} LevelCell::loadCustomLevelCell hook: {}", value ? "enable" : "disable", changeRes.unwrapErr());
-        });
+            (void)(value ? hook->enable().mapErr([](std::string const& err) {
+                return log::error("Failed to enable LevelCell::loadFromLevel hook: {}", err), err;
+            }) : hook->disable().mapErr([](std::string const& err) {
+                return log::error("Failed to disable LevelCell::loadFromLevel hook: {}", err), err;
+            }));
+        }, mod);
     }
 
-    void loadCustomLevelCell() {
-        LevelCell::loadCustomLevelCell();
+    void loadFromLevel(GJGameLevel* level) {
+        LevelCell::loadFromLevel(level);
 
-        if (m_level->m_demon.value() <= 0 || (m_level->m_levelLength != 5 && m_level->m_demonDifficulty < 6) ||
-            (m_level->m_levelLength == 5 && m_level->m_demonDifficulty != 0 && m_level->m_demonDifficulty < 5)) return;
+        if (level->m_levelType == GJLevelType::Editor || level->m_demon.value() <= 0 || (level->m_levelLength != 5 && level->m_demonDifficulty < 6) ||
+            (level->m_levelLength == 5 && level->m_demonDifficulty != 0 && level->m_demonDifficulty < 5)) return;
 
-        auto platformer = m_level->m_levelLength == 5;
-        auto levelID = m_level->m_levelID.value();
-        auto positions = ranges::map<std::vector<std::string>>(
-            ranges::filter(platformer ? IntegratedDemonlist::PEMONLIST : IntegratedDemonlist::AREDL, [levelID](const IDListDemon& demon) {
-                return demon.id == levelID;
-            }), [levelID](const IDListDemon& demon) { return std::to_string(demon.position); });
+        auto platformer = level->m_levelLength == 5;
+        auto levelID = level->m_levelID.value();
+        auto positions = ranges::reduce<std::vector<std::string>>(platformer ? IntegratedDemonlist::PEMONLIST : IntegratedDemonlist::AREDL,
+            [levelID](std::vector<std::string>& acc, const IDListDemon& demon) {
+                if (demon.id == levelID) acc.push_back(std::to_string(demon.position));
+            });
         if (!positions.empty()) return addRank(positions, platformer);
 
         if (Fields::LOADED_DEMONS.contains(levelID)) return;
 
         auto f = m_fields.self();
-        f->m_soloListener.bind([this, f, levelID, platformer](web::WebTask::Event* e) {
+        f->m_soloListener.bind([this, level, levelID, platformer](web::WebTask::Event* e) {
             if (auto res = e->getValue()) {
                 Fields::LOADED_DEMONS.insert(levelID);
                 if (!res->ok()) return;
@@ -59,10 +66,11 @@ class $modify(IDLevelCell, LevelCell) {
                 if (platformer && position1 > 150) return;
 
                 auto& list = platformer ? IntegratedDemonlist::PEMONLIST : IntegratedDemonlist::AREDL;
-                std::string levelName = m_level->m_levelName;
+                std::string levelName = level->m_levelName;
                 list.push_back({ levelID, levelName, position1 });
                 if (platformer) return addRank({ std::to_string(position1) }, platformer);
 
+                auto f = m_fields.self();
                 f->m_dualListener.bind([this, levelID, levelName, position1](web::WebTask::Event* e) {
                     if (auto res = e->getValue()) {
                         if (!res->ok()) return addRank({ std::to_string(position1) }, false);
@@ -80,11 +88,13 @@ class $modify(IDLevelCell, LevelCell) {
             }
         });
 
-        f->m_soloListener.setFilter(web::WebRequest().get(platformer ? fmt::format(PEMONLIST_LEVEL_URL, levelID) : fmt::format(AREDL_LEVEL_URL, levelID)));
+        f->m_soloListener.setFilter(
+            web::WebRequest().get(platformer ? fmt::format(PEMONLIST_LEVEL_URL, levelID) : fmt::format(AREDL_LEVEL_URL, levelID)));
     }
 
     void addRank(const std::vector<std::string>& positions, bool platformer) {
-        auto rankTextNode = CCLabelBMFont::create(fmt::format("#{} {}", string::join(positions, "/#"), platformer ? "Pemonlist" : "AREDL").c_str(), "chatFont.fnt");
+        auto rankTextNode = CCLabelBMFont::create(
+            fmt::format("#{} {}", string::join(positions, "/#"), platformer ? "Pemonlist" : "AREDL").c_str(), "chatFont.fnt");
         auto dailyLevel = m_level->m_dailyID.value() > 0;
         rankTextNode->setPosition({ 346.0f, dailyLevel ? 6.0f : 1.0f });
         rankTextNode->setAnchorPoint({ 1.0f, 0.0f });

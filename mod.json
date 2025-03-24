@@ -1,11 +1,11 @@
 {
-    "geode": "4.2.0",
+    "geode": "4.3.1",
     "gd": {
         "android": "2.2074",
         "win": "2.2074",
         "mac": "2.2074"
     },
-    "version": "v1.7.3",
+    "version": "v1.7.4",
     "id": "hiimjustin000.integrated_demonlist",
     "name": "Integrated Demonlist",
     "developer": "hiimjasmine00",
@@ -31,7 +31,7 @@
         }
     },
     "dependencies": {
-        "geode.node-ids": ">=v1.12.0"
+        "geode.node-ids": ">=v1.9.0"
     },
     "links": {
         "community": "https://discord.gg/QVKmbvBXA7",

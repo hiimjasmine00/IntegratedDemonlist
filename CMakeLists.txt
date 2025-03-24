@@ -5,7 +5,7 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(GEODE_DISABLE_PRECOMPILED_HEADERS ON)
 
-project(IntegratedDemonlist VERSION 1.7.3)
+project(IntegratedDemonlist VERSION 1.7.4)
 
 add_library(${PROJECT_NAME} SHARED
     src/classes/IDListLayer.cpp

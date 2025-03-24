@@ -1,4 +1,7 @@
 # Integrated Demonlist Changelog
+## v1.7.4 (2025-03-24)
+- Fixed a probable bug which could cause demon search to not work properly
+
 ## v1.7.3 (2025-02-07)
 - Reduced Pemonlist size to 150 demons
 - Added node IDs to the list pages

@@ -16,7 +16,7 @@ class $modify(IDLevelBrowserLayer, LevelBrowserLayer) {
         demonlistButtonSprite->getTopNode()->setScale(1.0f);
         auto demonlistButton = CCMenuItemSpriteExtra::create(demonlistButtonSprite, this, menu_selector(IDLevelBrowserLayer::onDemonlistPacks));
         demonlistButton->setID("demonlist-button"_spr);
-        auto y = demonlistButtonSprite->getContentHeight() / 2 + 4.0f;
+        auto y = demonlistButtonSprite->getContentHeight() / 2.0f + 4.0f;
         auto menu = CCMenu::create();
         menu->addChild(demonlistButton);
         menu->setPosition({ winSize.width - y, y });

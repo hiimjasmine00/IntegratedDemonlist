@@ -1,4 +1,3 @@
-#pragma once
 #include <Geode/utils/web.hpp>
 
 struct IDListDemon {
@@ -22,21 +21,21 @@ public:
     inline static bool PEMONLIST_LOADED = false;
 
     static void loadAREDL(
-        geode::EventListener<geode::utils::web::WebTask>&&,
-        geode::EventListener<geode::utils::web::WebTask>&&,
-        const std::function<void()>&,
-        const std::function<void(int)>&
+        geode::EventListener<geode::utils::web::WebTask>*,
+        geode::EventListener<geode::utils::web::WebTask>*,
+        std::function<void()>,
+        std::function<void(int)>
     );
     static void loadAREDLPacks(
-        geode::EventListener<geode::utils::web::WebTask>&&,
-        geode::EventListener<geode::utils::web::WebTask>&&,
-        const std::function<void()>&,
-        const std::function<void(int)>&
+        geode::EventListener<geode::utils::web::WebTask>*,
+        geode::EventListener<geode::utils::web::WebTask>*,
+        std::function<void()>,
+        std::function<void(int)>
     );
     static void loadPemonlist(
-        geode::EventListener<geode::utils::web::WebTask>&&,
-        geode::EventListener<geode::utils::web::WebTask>&&,
-        const std::function<void()>&,
-        const std::function<void(int)>&
+        geode::EventListener<geode::utils::web::WebTask>*,
+        geode::EventListener<geode::utils::web::WebTask>*,
+        std::function<void()>,
+        std::function<void(int)>
     );
 };

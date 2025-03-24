@@ -64,7 +64,7 @@ bool IDPackLayer::init() {
 
     m_list = GJListLayer::create(ListView::create(CCArray::create(), 100.0f, 356.0f, 190.0f), "AREDL Packs", { 0, 0, 0, 180 }, 356.0f, 220.0f, 0);
     m_list->setZOrder(2);
-    m_list->setPosition(winSize / 2 - m_list->getContentSize() / 2);
+    m_list->setPosition(winSize / 2.0f - m_list->getContentSize() / 2.0f);
     m_list->setID("GJListLayer");
     addChild(m_list);
 
@@ -83,14 +83,14 @@ bool IDPackLayer::init() {
     menu->addChild(m_backButton);
 
     m_leftButton = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_arrow_03_001.png", 1.0f, [this](auto) { page(m_page - 1); });
-    m_leftButton->setPosition({ 24.0f, winSize.height / 2 });
+    m_leftButton->setPosition({ 24.0f, winSize.height / 2.0f });
     m_leftButton->setID("prev-page-button");
     menu->addChild(m_leftButton);
 
     auto rightBtnSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png");
     rightBtnSpr->setFlipX(true);
     m_rightButton = CCMenuItemExt::createSpriteExtra(rightBtnSpr, [this](auto) { page(m_page + 1); });
-    m_rightButton->setPosition({ winSize.width - 24.0f, winSize.height / 2 });
+    m_rightButton->setPosition({ winSize.width - 24.0f, winSize.height / 2.0f });
     m_rightButton->setID("next-page-button");
     menu->addChild(m_rightButton);
 
@@ -102,9 +102,9 @@ bool IDPackLayer::init() {
     auto refreshBtnSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     auto refreshButton = CCMenuItemExt::createSpriteExtra(refreshBtnSpr, [this](auto) {
         showLoading();
-        IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] { populateList(m_query); }, failure());
+        IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, &m_aredlOkListener, [this] { populateList(m_query); }, failure());
     });
-    refreshButton->setPosition(winSize.width - refreshBtnSpr->getContentWidth() / 2 - 4.0f, refreshBtnSpr->getContentHeight() / 2 + 4.0f);
+    refreshButton->setPosition(winSize.width - refreshBtnSpr->getContentWidth() / 2.0f - 4.0f, refreshBtnSpr->getContentHeight() / 2.0f + 4.0f);
     refreshButton->setID("refresh-button");
     menu->addChild(refreshButton, 2);
 
@@ -112,7 +112,7 @@ bool IDPackLayer::init() {
     pageBtnSpr->setScale(0.7f);
     m_pageLabel = CCLabelBMFont::create("1", "bigFont.fnt");
     m_pageLabel->setScale(0.8f);
-    m_pageLabel->setPosition(pageBtnSpr->getContentSize() / 2);
+    m_pageLabel->setPosition(pageBtnSpr->getContentSize() / 2.0f);
     pageBtnSpr->addChild(m_pageLabel);
     m_pageButton = CCMenuItemExt::createSpriteExtra(pageBtnSpr, [this](auto) {
         auto popup = SetIDPopup::create(m_page + 1, 1, (m_fullSearchResults.size() + 9) / 10, "Go to Page", "Go", true, 1, 60.0f, false, false);
@@ -127,30 +127,32 @@ bool IDPackLayer::init() {
         static std::mt19937 mt(std::random_device{}());
         page(std::uniform_int_distribution<int>(0, (m_fullSearchResults.size() - 1) / 10)(mt));
     });
-    m_randomButton->setPositionY(m_pageButton->getPositionY() - m_pageButton->getContentHeight() / 2 - m_randomButton->getContentHeight() / 2 - 5.0f);
+    m_randomButton->setPositionY(
+        m_pageButton->getPositionY() - m_pageButton->getContentHeight() / 2.0f - m_randomButton->getContentHeight() / 2.0f - 5.0f);
     m_randomButton->setID("random-button");
     menu->addChild(m_randomButton);
 
     auto lastArrow = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
     lastArrow->setFlipX(true);
     auto otherLastArrow = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
-    otherLastArrow->setPosition(lastArrow->getContentSize() / 2 + CCPoint { 20.0f, 0.0f });
+    otherLastArrow->setPosition(lastArrow->getContentSize() / 2.0f + CCPoint { 20.0f, 0.0f });
     otherLastArrow->setFlipX(true);
     lastArrow->addChild(otherLastArrow);
     lastArrow->setScale(0.4f);
     m_lastButton = CCMenuItemExt::createSpriteExtra(lastArrow, [this](auto) { page((m_fullSearchResults.size() - 1) / 10); });
-    m_lastButton->setPositionY(m_randomButton->getPositionY() - m_randomButton->getContentHeight() / 2 - m_lastButton->getContentHeight() / 2 - 5.0f);
+    m_lastButton->setPositionY(
+        m_randomButton->getPositionY() - m_randomButton->getContentHeight() / 2.0f - m_lastButton->getContentHeight() / 2.0f - 5.0f);
     m_lastButton->setID("last-button");
     menu->addChild(m_lastButton);
 
-    auto x = winSize.width - m_randomButton->getContentWidth() / 2 - 3.0f;
+    auto x = winSize.width - m_randomButton->getContentWidth() / 2.0f - 3.0f;
     m_pageButton->setPositionX(x);
     m_randomButton->setPositionX(x);
     m_lastButton->setPositionX(x - 4.0f);
 
     auto firstArrow = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
     auto otherFirstArrow = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
-    otherFirstArrow->setPosition(firstArrow->getContentSize() / 2 - CCPoint { 20.0f, 0.0f });
+    otherFirstArrow->setPosition(firstArrow->getContentSize() / 2.0f - CCPoint { 20.0f, 0.0f });
     firstArrow->addChild(otherFirstArrow);
     firstArrow->setScale(0.4f);
     m_firstButton = CCMenuItemExt::createSpriteExtra(firstArrow, [this](auto) { page(0); });
@@ -169,7 +171,7 @@ bool IDPackLayer::init() {
     setKeyboardEnabled(true);
 
     if (!IntegratedDemonlist::AREDL_PACKS.empty()) populateList("");
-    else IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] { populateList(""); }, failure());
+    else IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, &m_aredlOkListener, [this] { populateList(""); }, failure());
 
     return true;
 }
@@ -244,13 +246,12 @@ void IDPackLayer::populateList(const std::string& query) {
     auto packs = CCArray::create();
     auto start = m_page * 10;
     auto end = std::min((int)m_fullSearchResults.size(), (m_page + 1) * 10);
-    auto searchResults = std::vector<IDDemonPack>(m_fullSearchResults.begin() + start, m_fullSearchResults.begin() + end);
-    for (const auto& pack : searchResults) {
-        packs->addObject(IDPackCell::create(pack));
+    for (const auto& pack : std::vector<IDDemonPack>(m_fullSearchResults.begin() + start, m_fullSearchResults.begin() + end)) {
+        packs->addObject(IDPackCell::create(pack.name, pack.points, pack.levels));
     }
     m_list = GJListLayer::create(ListView::create(packs, 100.0f, 356.0f, 190.0f), "AREDL Packs", { 0, 0, 0, 180 }, 356.0f, 220.0f, 0);
     m_list->setZOrder(2);
-    m_list->setPosition(winSize / 2 - m_list->getContentSize() / 2);
+    m_list->setPosition(winSize / 2.0f - m_list->getContentSize() / 2.0f);
     m_list->setID("GJListLayer");
     addChild(m_list);
     addSearchBar();
@@ -273,7 +274,7 @@ void IDPackLayer::populateList(const std::string& query) {
 void IDPackLayer::search() {
     if (m_query != m_searchBarText) {
         showLoading();
-        IntegratedDemonlist::loadAREDLPacks(std::move(m_aredlListener), std::move(m_aredlOkListener), [this] {
+        IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, &m_aredlOkListener, [this] {
             m_page = 0;
             populateList(m_searchBarText);
         }, failure());

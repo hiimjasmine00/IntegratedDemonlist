@@ -6,10 +6,11 @@
 class IDListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
 private:
     inline static bool PEMONLIST = false;
-    inline static const char* AREDL_INFO =
-        "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) is an <cp>unofficial ranking</c> of all rated <cj>classic mode</c> <cr>extreme demons</c> in Geometry Dash.\n"
+    inline static constexpr const char* AREDL_INFO =
+        "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) is an <cp>unofficial ranking</c> "
+        "of all rated <cj>classic mode</c> <cr>extreme demons</c> in Geometry Dash.\n"
         "It is managed by <cy>Padahk</c> and <cy>ley</c>.";
-    inline static const char* PEMONLIST_INFO =
+    inline static constexpr const char* PEMONLIST_INFO =
         "The <cg>Pemonlist</c> is an <cp>unofficial ranking</c> of the top 150 <cj>platformer mode</c> <cr>demons</c> in Geometry Dash.\n"
         "It is managed by <cy>camila314</c>, <cy>Extatica</c>, <cy>IvanCrafter026</c>, <cy>Megu</c>, and <cy>Voiddle</c>.";
 public:
@@ -54,14 +55,8 @@ protected:
     void addSearchBar();
     void showLoading();
     void populateList(const std::string& query);
-    void loadLevelsFinished(cocos2d::CCArray*, const char*) override;
-    void loadLevelsFailed(const char*) override;
-    void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override {
-        loadLevelsFinished(levels, key);
-    }
-    void loadLevelsFailed(const char* key, int) override {
-        loadLevelsFailed(key);
-    }
+    void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override;
+    void loadLevelsFailed(const char* key, int) override;
     void setupPageInfo(gd::string, const char*) override;
     void setIDPopupClosed(SetIDPopup*, int) override;
 };
