@@ -1,4 +1,7 @@
 # Integrated Demonlist Changelog
+## v1.7.5 (2025-04-01)
+- Internal code changes (April Fools' Day)
+
 ## v1.7.4 (2025-03-24)
 - Fixed a probable bug which could cause demon search to not work properly
 
