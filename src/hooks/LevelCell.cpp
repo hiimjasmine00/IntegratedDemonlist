@@ -11,10 +11,11 @@ using namespace geode::prelude;
 
 class $modify(IDLevelCell, LevelCell) {
     struct Fields {
-        inline static std::set<int> LOADED_DEMONS;
         EventListener<web::WebTask> m_soloListener;
         EventListener<web::WebTask> m_dualListener;
     };
+
+    inline static std::set<int> loadedDemons;
 
     static void onModify(ModifyBase<ModifyDerive<IDLevelCell, LevelCell>>& self) {
         (void)self.setHookPriorityAfterPost("LevelCell::loadFromLevel", "hiimjustin000.level_size");
@@ -45,18 +46,18 @@ class $modify(IDLevelCell, LevelCell) {
 
         auto platformer = level->m_levelLength == 5;
         auto levelID = level->m_levelID.value();
-        auto positions = ranges::reduce<std::vector<std::string>>(platformer ? IntegratedDemonlist::PEMONLIST : IntegratedDemonlist::AREDL,
+        auto positions = ranges::reduce<std::vector<std::string>>(platformer ? IntegratedDemonlist::pemonlist : IntegratedDemonlist::aredl,
             [levelID](std::vector<std::string>& acc, const IDListDemon& demon) {
                 if (demon.id == levelID) acc.push_back(std::to_string(demon.position));
             });
         if (!positions.empty()) return addRank(positions, platformer);
 
-        if (Fields::LOADED_DEMONS.contains(levelID)) return;
+        if (loadedDemons.contains(levelID)) return;
 
         auto f = m_fields.self();
         f->m_soloListener.bind([this, level, levelID, platformer](web::WebTask::Event* e) {
             if (auto res = e->getValue()) {
-                Fields::LOADED_DEMONS.insert(levelID);
+                loadedDemons.insert(levelID);
                 if (!res->ok()) return;
 
                 auto json = res->json().unwrapOr(matjson::Value());
@@ -66,7 +67,7 @@ class $modify(IDLevelCell, LevelCell) {
                 int position1 = json[key].asInt().unwrap();
                 if (platformer && position1 > 150) return;
 
-                auto& list = platformer ? IntegratedDemonlist::PEMONLIST : IntegratedDemonlist::AREDL;
+                auto& list = platformer ? IntegratedDemonlist::pemonlist : IntegratedDemonlist::aredl;
                 std::string levelName = level->m_levelName;
                 list.push_back({ levelID, levelName, position1 });
                 if (platformer) return addRank({ std::to_string(position1) }, platformer);
@@ -80,7 +81,7 @@ class $modify(IDLevelCell, LevelCell) {
                         if (!json.isObject() || !json.contains("position") || !json["position"].isNumber()) return;
 
                         int position2 = json["position"].asInt().unwrap();
-                        IntegratedDemonlist::AREDL.push_back({ levelID, levelName, position2 });
+                        IntegratedDemonlist::aredl.push_back({ levelID, levelName, position2 });
                         addRank({ std::to_string(position1), std::to_string(position2) }, false);
                     }
                 });

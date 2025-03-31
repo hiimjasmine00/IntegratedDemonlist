@@ -14,11 +14,11 @@ struct IDDemonPack {
 
 class IntegratedDemonlist {
 public:
-    inline static std::vector<IDListDemon> AREDL = {};
-    inline static std::vector<IDDemonPack> AREDL_PACKS = {};
-    inline static std::vector<IDListDemon> PEMONLIST = {};
-    inline static bool AREDL_LOADED = false;
-    inline static bool PEMONLIST_LOADED = false;
+    inline static std::vector<IDListDemon> aredl = {};
+    inline static std::vector<IDDemonPack> aredlPacks = {};
+    inline static std::vector<IDListDemon> pemonlist = {};
+    inline static bool aredlLoaded = false;
+    inline static bool pemonlistLoaded = false;
 
     static void loadAREDL(
         geode::EventListener<geode::utils::web::WebTask>*,

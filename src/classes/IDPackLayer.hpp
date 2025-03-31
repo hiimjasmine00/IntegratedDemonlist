@@ -4,7 +4,7 @@
 
 class IDPackLayer : public cocos2d::CCLayer, SetIDPopupDelegate {
 private:
-    inline static constexpr const char* AREDL_PACK_INFO =
+    inline static constexpr const char* aredlPackInfo =
         "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) has <cp>packs</c> of <cr>extreme demons</c> that are <cj>related</c> in some way.\n"
         "If all levels in a pack are <cl>completed</c>, the pack can earn <cy>points</c> on <cg>aredl.net</c>.";
 public:

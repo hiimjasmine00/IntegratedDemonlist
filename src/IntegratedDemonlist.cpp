@@ -26,12 +26,12 @@ void IntegratedDemonlist::loadAREDL(
         if (auto res = e->getValue()) {
             if (!res->ok()) return failure(res->code());
 
-            AREDL_LOADED = true;
-            AREDL.clear();
+            aredlLoaded = true;
+            aredl.clear();
             auto json = res->json().unwrapOr(std::vector<matjson::Value>());
             if (!json.isArray()) return success();
 
-            AREDL = ranges::reduce<ListDemons>(json.asArray().unwrap(), [](ListDemons& acc, const matjson::Value& level) {
+            aredl = ranges::reduce<ListDemons>(json.asArray().unwrap(), [](ListDemons& acc, const matjson::Value& level) {
                 if ((level.contains("legacy") && level["legacy"].isBool() && level["legacy"].asBool().unwrap()) ||
                     !level.contains("level_id") || !level["level_id"].isNumber() &&
                     !level.contains("name") || !level["name"].isString() &&
@@ -62,11 +62,11 @@ void IntegratedDemonlist::loadAREDLPacks(
         if (auto res = e->getValue()) {
             if (!res->ok()) return failure(res->code());
 
-            AREDL_PACKS.clear();
+            aredlPacks.clear();
             auto json = res->json().unwrapOr(matjson::Value());
             if (!json.isArray()) return success();
 
-            AREDL_PACKS = ranges::reduce<DemonPacks>(json.asArray().unwrap(), [](DemonPacks& acc, const matjson::Value& pack) {
+            aredlPacks = ranges::reduce<DemonPacks>(json.asArray().unwrap(), [](DemonPacks& acc, const matjson::Value& pack) {
                 if (!pack.contains("name") || !pack["name"].isString() ||
                     !pack.contains("points") || !pack["points"].isNumber() ||
                     !pack.contains("levels") || !pack["levels"].isArray()) return;
@@ -79,7 +79,7 @@ void IntegratedDemonlist::loadAREDLPacks(
                     })
                 });
             });
-            std::ranges::sort(AREDL_PACKS, [](const IDDemonPack& a, const IDDemonPack& b) { return a.points < b.points; });
+            std::ranges::sort(aredlPacks, [](const IDDemonPack& a, const IDDemonPack& b) { return a.points < b.points; });
 
             success();
         }
@@ -99,12 +99,12 @@ void IntegratedDemonlist::loadPemonlist(
         if (auto res = e->getValue()) {
             if (!res->ok()) return failure(res->code());
 
-            PEMONLIST_LOADED = true;
-            PEMONLIST.clear();
+            pemonlistLoaded = true;
+            pemonlist.clear();
             auto json = res->json().unwrapOr(matjson::Value());
             if (!json.isObject() || !json.contains("data") || !json["data"].isArray()) return success();
 
-            PEMONLIST = ranges::reduce<ListDemons>(json["data"].asArray().unwrap(), [](ListDemons& acc, const matjson::Value& level) {
+            pemonlist = ranges::reduce<ListDemons>(json["data"].asArray().unwrap(), [](ListDemons& acc, const matjson::Value& level) {
                 if (!level.contains("level_id") || !level["level_id"].isNumber() ||
                     !level.contains("name") || !level["name"].isString() ||
                     !level.contains("placement") || !level["placement"].isNumber()) return;

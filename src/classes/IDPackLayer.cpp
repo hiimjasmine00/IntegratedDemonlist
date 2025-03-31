@@ -94,7 +94,7 @@ bool IDPackLayer::init() {
     m_rightButton->setID("next-page-button");
     menu->addChild(m_rightButton);
 
-    auto infoButton = InfoAlertButton::create("AREDL Packs", AREDL_PACK_INFO, 1.0f);
+    auto infoButton = InfoAlertButton::create("AREDL Packs", aredlPackInfo, 1.0f);
     infoButton->setPosition({ 30.0f, 30.0f });
     infoButton->setID("info-button");
     menu->addChild(infoButton, 2);
@@ -170,7 +170,7 @@ bool IDPackLayer::init() {
     setKeypadEnabled(true);
     setKeyboardEnabled(true);
 
-    if (!IntegratedDemonlist::AREDL_PACKS.empty()) populateList("");
+    if (!IntegratedDemonlist::aredlPacks.empty()) populateList("");
     else IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, &m_aredlOkListener, [this] { populateList(""); }, failure());
 
     return true;
@@ -235,7 +235,7 @@ void IDPackLayer::showLoading() {
 }
 
 void IDPackLayer::populateList(const std::string& query) {
-    m_fullSearchResults = ranges::filter(IntegratedDemonlist::AREDL_PACKS, [&query](const IDDemonPack& pack) {
+    m_fullSearchResults = ranges::filter(IntegratedDemonlist::aredlPacks, [&query](const IDDemonPack& pack) {
         return query.empty() || string::contains(string::toLower(pack.name), string::toLower(query));
     });
 

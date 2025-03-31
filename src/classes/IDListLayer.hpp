@@ -5,12 +5,12 @@
 
 class IDListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
 private:
-    inline static bool PEMONLIST = false;
-    inline static constexpr const char* AREDL_INFO =
+    inline static bool pemonlistEnabled = false;
+    inline static constexpr const char* aredlInfo =
         "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) is an <cp>unofficial ranking</c> "
         "of all rated <cj>classic mode</c> <cr>extreme demons</c> in Geometry Dash.\n"
         "It is managed by <cy>Padahk</c> and <cy>ley</c>.";
-    inline static constexpr const char* PEMONLIST_INFO =
+    inline static constexpr const char* pemonlistInfo =
         "The <cg>Pemonlist</c> is an <cp>unofficial ranking</c> of the top 150 <cj>platformer mode</c> <cr>demons</c> in Geometry Dash.\n"
         "It is managed by <cy>camila314</c>, <cy>Extatica</c>, <cy>IvanCrafter026</c>, <cy>Megu</c>, and <cy>Voiddle</c>.";
 public:
