@@ -22,7 +22,7 @@ class $modify(IDLevelCell, LevelCell) {
         (void)self.getHook("LevelCell::loadFromLevel").map([](Hook* hook) {
             auto mod = Mod::get();
             hook->setAutoEnable(mod->getSettingValue<bool>("enable-rank"));
-    
+
             listenForSettingChanges<bool>("enable-rank", [hook](bool value) {
                 (void)(value ? hook->enable().mapErr([](const std::string& err) {
                     return log::error("Failed to enable LevelCell::loadFromLevel hook: {}", err), err;
