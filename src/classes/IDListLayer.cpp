@@ -305,7 +305,7 @@ void IDListLayer::populateList(const std::string& query) {
     else {
         auto glm = GameLevelManager::get();
         glm->m_levelManagerDelegate = this;
-        auto searchObject = GJSearchObject::create(SearchType::MapPackOnClick, string::join(std::vector<std::string>(
+        auto searchObject = GJSearchObject::create(SearchType::Type19, string::join(std::vector<std::string>(
             m_fullSearchResults.begin() + m_page * 10,
             m_fullSearchResults.begin() + std::min((int)m_fullSearchResults.size(), (m_page + 1) * 10)
         ), ","));

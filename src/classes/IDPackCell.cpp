@@ -41,7 +41,7 @@ bool IDPackCell::init(const std::string& name, double points, const std::vector<
     auto viewSprite = ButtonSprite::create("View", 50, 0, 0.6f, false, "bigFont.fnt", "GJ_button_01.png", 50.0f);
     auto viewMenu = CCMenu::create();
     auto viewButton = CCMenuItemExt::createSpriteExtra(viewSprite, [this, levels](auto) {
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelBrowserLayer::scene(GJSearchObject::create(SearchType::MapPackOnClick,
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelBrowserLayer::scene(GJSearchObject::create(SearchType::Type19,
             ranges::reduce<std::string>(levels, [](std::string& str, int level) { str += (str.empty() ? "" : ",") + std::to_string(level); })))));
     });
     viewButton->setID("view-button");

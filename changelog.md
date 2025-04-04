@@ -1,4 +1,8 @@
 # Integrated Demonlist Changelog
+## v1.7.6 (2025-04-04)
+- Added support for iOS
+- Fixed a bug where the page label would be incorrect when viewing a demon pack
+
 ## v1.7.5 (2025-04-01)
 - Internal code changes (April Fools' Day)
 

@@ -3,9 +3,10 @@
     "gd": {
         "android": "2.2074",
         "win": "2.2074",
-        "mac": "2.2074"
+        "mac": "2.2074",
+        "ios": "2.2074"
     },
-    "version": "v1.7.5",
+    "version": "v1.7.6",
     "id": "hiimjustin000.integrated_demonlist",
     "name": "Integrated Demonlist",
     "developer": "hiimjasmine00",
