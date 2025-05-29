@@ -1,4 +1,7 @@
 # Integrated Demonlist Changelog
+## v1.7.8 (2025-05-28)
+- Added support for the AREDL uptime endpoint
+
 ## v1.7.7 (2025-05-28)
 - Switched to AREDL API v2
 - Fixed a bug where the game would crash when trying to load the demonlist if the AREDL API was down
