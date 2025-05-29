@@ -17,12 +17,12 @@ jobs:
           target: Win64
           build-config: RelWithDebInfo
 
+        - name: macOS
+          os: macos-latest
+
         - name: iOS
           os: macos-latest
           target: iOS
-
-        - name: macOS
-          os: macos-latest
 
         - name: Android32
           os: ubuntu-latest
