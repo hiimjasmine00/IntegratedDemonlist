@@ -4,15 +4,6 @@
 #include <Geode/utils/web.hpp>
 
 class IDListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
-private:
-    inline static bool pemonlistEnabled = false;
-    inline static constexpr const char* aredlInfo =
-        "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) is an <cp>unofficial ranking</c> "
-        "of all rated <cj>classic mode</c> <cr>extreme demons</c> in Geometry Dash.\n"
-        "It is managed by <cy>Padahk</c> and <cy>ley</c>.";
-    inline static constexpr const char* pemonlistInfo =
-        "The <cg>Pemonlist</c> is an <cp>unofficial ranking</c> of the top 150 <cj>platformer mode</c> <cr>demons</c> in Geometry Dash.\n"
-        "It is managed by <cy>camila314</c>, <cy>Extatica</c>, <cy>IvanCrafter026</c>, <cy>Megu</c>, and <cy>Voiddle</c>.";
 public:
     static IDListLayer* create();
     static cocos2d::CCScene* scene();
@@ -25,9 +16,7 @@ public:
     ~IDListLayer() override;
 protected:
     geode::EventListener<geode::utils::web::WebTask> m_aredlListener;
-    geode::EventListener<geode::utils::web::WebTask> m_aredlOkListener;
     geode::EventListener<geode::utils::web::WebTask> m_pemonlistListener;
-    geode::EventListener<geode::utils::web::WebTask> m_pemonlistOkListener;
     GJListLayer* m_list;
     cocos2d::CCLabelBMFont* m_listLabel;
     LoadingCircle* m_loadingCircle;
@@ -46,8 +35,8 @@ protected:
     CCMenuItemSpriteExtra* m_starToggle;
     CCMenuItemSpriteExtra* m_moonToggle;
     int m_page = 0;
-    std::string m_query = "";
-    std::string m_searchBarText = "";
+    std::string m_query;
+    std::string m_searchBarText;
     std::vector<std::string> m_fullSearchResults;
 
     bool init() override;

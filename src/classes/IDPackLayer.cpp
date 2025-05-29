@@ -1,5 +1,6 @@
 #include "IDPackLayer.hpp"
 #include "IDPackCell.hpp"
+#include <Geode/binding/AppDelegate.hpp>
 #include <Geode/binding/GJListLayer.hpp>
 #include <Geode/binding/InfoAlertButton.hpp>
 #include <Geode/binding/LoadingCircle.hpp>
@@ -10,6 +11,10 @@
 #include <random>
 
 using namespace geode::prelude;
+
+constexpr const char* aredlPackInfo =
+    "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) has <cp>packs</c> of <cr>extreme demons</c> that are <cj>related</c> in some way.\n"
+    "If all levels in a pack are <cl>completed</c>, the pack can earn <cy>points</c> on <cg>aredl.net</c>.";
 
 IDPackLayer* IDPackLayer::create() {
     auto ret = new IDPackLayer();
@@ -23,6 +28,7 @@ IDPackLayer* IDPackLayer::create() {
 
 CCScene* IDPackLayer::scene() {
     auto ret = CCScene::create();
+    AppDelegate::get()->m_runningScene = ret;
     ret->addChild(IDPackLayer::create());
     return ret;
 }
@@ -102,7 +108,7 @@ bool IDPackLayer::init() {
     auto refreshBtnSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     auto refreshButton = CCMenuItemExt::createSpriteExtra(refreshBtnSpr, [this](auto) {
         showLoading();
-        IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, &m_aredlOkListener, [this] { populateList(m_query); }, failure());
+        IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, [this] { populateList(m_query); }, failure());
     });
     refreshButton->setPosition(winSize.width - refreshBtnSpr->getContentWidth() / 2.0f - 4.0f, refreshBtnSpr->getContentHeight() / 2.0f + 4.0f);
     refreshButton->setID("refresh-button");
@@ -171,7 +177,7 @@ bool IDPackLayer::init() {
     setKeyboardEnabled(true);
 
     if (!IntegratedDemonlist::aredlPacks.empty()) populateList("");
-    else IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, &m_aredlOkListener, [this] { populateList(""); }, failure());
+    else IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, [this] { populateList(""); }, failure());
 
     return true;
 }
@@ -221,7 +227,7 @@ void IDPackLayer::addSearchBar() {
 }
 
 void IDPackLayer::showLoading() {
-    m_pageLabel->setString(std::to_string(m_page + 1).c_str());
+    m_pageLabel->setString(fmt::to_string(m_page + 1).c_str());
     m_loadingCircle->setVisible(true);
     m_list->m_listView->setVisible(false);
     m_searchBarMenu->setVisible(false);
@@ -274,7 +280,7 @@ void IDPackLayer::populateList(const std::string& query) {
 void IDPackLayer::search() {
     if (m_query != m_searchBarText) {
         showLoading();
-        IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, &m_aredlOkListener, [this] {
+        IntegratedDemonlist::loadAREDLPacks(&m_aredlListener, [this] {
             m_page = 0;
             populateList(m_searchBarText);
         }, failure());

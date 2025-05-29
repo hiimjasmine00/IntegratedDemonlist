@@ -1,5 +1,6 @@
 #include "IDListLayer.hpp"
 #include "../IntegratedDemonlist.hpp"
+#include <Geode/binding/AppDelegate.hpp>
 #include <Geode/binding/CustomListView.hpp>
 #include <Geode/binding/GameLevelManager.hpp>
 #include <Geode/binding/GJListLayer.hpp>
@@ -25,9 +26,19 @@ IDListLayer* IDListLayer::create() {
 
 CCScene* IDListLayer::scene() {
     auto ret = CCScene::create();
+    AppDelegate::get()->m_runningScene = ret;
     ret->addChild(IDListLayer::create());
     return ret;
 }
+
+bool pemonlistEnabled = false;
+constexpr const char* aredlInfo =
+    "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) is an <cp>unofficial ranking</c> "
+    "of all rated <cj>classic mode</c> <cr>extreme demons</c> in Geometry Dash.\n"
+    "It is managed by <cy>Padahk</c> and <cy>YeahSlayed</c>.";
+constexpr const char* pemonlistInfo =
+    "The <cg>Pemonlist</c> is an <cp>unofficial ranking</c> of the top 150 <cj>platformer mode</c> <cr>demons</c> in Geometry Dash.\n"
+    "It is managed by <cy>camila314</c>, <cy>Extatica</c>, <cy>IvanCrafter026</c>, <cy>Megu</c>, and <cy>Voiddle</c>.";
 
 bool IDListLayer::init() {
     if (!CCLayer::init()) return false;
@@ -106,9 +117,8 @@ bool IDListLayer::init() {
     auto refreshBtnSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     auto refreshButton = CCMenuItemExt::createSpriteExtra(refreshBtnSpr, [this](auto) {
         showLoading();
-        if (pemonlistEnabled) IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, &m_pemonlistOkListener,
-            [this] { populateList(m_query); }, failure(true));
-        else IntegratedDemonlist::loadAREDL(&m_aredlListener, &m_aredlOkListener, [this] { populateList(m_query); }, failure(false));
+        if (pemonlistEnabled) IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, [this] { populateList(m_query); }, failure(true));
+        else IntegratedDemonlist::loadAREDL(&m_aredlListener, [this] { populateList(m_query); }, failure(false));
     });
     refreshButton->setPosition({ winSize.width - refreshBtnSpr->getContentWidth() / 2.0f - 4.0f, refreshBtnSpr->getContentHeight() / 2.0f + 4.0f });
     refreshButton->setID("refresh-button");
@@ -128,7 +138,7 @@ bool IDListLayer::init() {
         m_infoButton->m_description = aredlInfo;
         m_fullSearchResults.clear();
         if (IntegratedDemonlist::aredlLoaded) page(0);
-        else IntegratedDemonlist::loadAREDL(&m_aredlListener, &m_aredlOkListener, [this] { page(0); }, failure(false));
+        else IntegratedDemonlist::loadAREDL(&m_aredlListener, [this] { page(0); }, failure(false));
     });
     m_starToggle->setPosition({ 30.0f, 60.0f });
     m_starToggle->setColor(pemonlistEnabled ? ccColor3B { 125, 125, 125 } : ccColor3B { 255, 255, 255 });
@@ -149,7 +159,7 @@ bool IDListLayer::init() {
         m_infoButton->m_description = pemonlistInfo;
         m_fullSearchResults.clear();
         if (IntegratedDemonlist::pemonlistLoaded) page(0);
-        else IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, &m_pemonlistOkListener, [this] { page(0); }, failure(true));
+        else IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, [this] { page(0); }, failure(true));
     });
     m_moonToggle->setPosition({ 60.0f, 60.0f });
     m_moonToggle->setColor(pemonlistEnabled ? ccColor3B { 255, 255, 255 } : ccColor3B { 125, 125, 125 });
@@ -210,19 +220,17 @@ bool IDListLayer::init() {
 
     m_loadingCircle = LoadingCircle::create();
     m_loadingCircle->setParentLayer(this);
-    m_loadingCircle->retain();
-    m_loadingCircle->show();
     m_loadingCircle->setID("loading-circle");
+    m_loadingCircle->show();
 
     showLoading();
     setKeypadEnabled(true);
     setKeyboardEnabled(true);
 
     if (pemonlistEnabled && IntegratedDemonlist::pemonlistLoaded) populateList("");
-    else if (pemonlistEnabled) IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, &m_pemonlistOkListener,
-        [this] { populateList(""); }, failure(true));
+    else if (pemonlistEnabled) IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, [this] { populateList(""); }, failure(true));
     else if (IntegratedDemonlist::aredlLoaded) populateList("");
-    else IntegratedDemonlist::loadAREDL(&m_aredlListener, &m_aredlOkListener, [this] { populateList(""); }, failure(false));
+    else IntegratedDemonlist::loadAREDL(&m_aredlListener, [this] { populateList(""); }, failure(false));
 
     return true;
 }
@@ -276,7 +284,7 @@ void IDListLayer::addSearchBar() {
 }
 
 void IDListLayer::showLoading() {
-    m_pageLabel->setString(std::to_string(m_page + 1).c_str());
+    m_pageLabel->setString(fmt::to_string(m_page + 1).c_str());
     m_loadingCircle->setVisible(true);
     m_list->m_listView->setVisible(false);
     m_searchBarMenu->setVisible(false);
@@ -293,7 +301,7 @@ void IDListLayer::populateList(const std::string& query) {
     m_fullSearchResults = ranges::reduce<std::vector<std::string>>(pemonlistEnabled ? IntegratedDemonlist::pemonlist : IntegratedDemonlist::aredl,
         [&query](std::vector<std::string>& acc, const IDListDemon& level) {
             if (!query.empty() && !string::contains(string::toLower(level.name), string::toLower(query))) return;
-            acc.push_back(std::to_string(level.id));
+            acc.push_back(fmt::to_string(level.id));
         });
 
     m_query = query;
@@ -358,11 +366,11 @@ void IDListLayer::setupPageInfo(gd::string, const char*) {
 void IDListLayer::search() {
     if (m_query != m_searchBarText) {
         showLoading();
-        if (pemonlistEnabled) IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, &m_pemonlistOkListener, [this] {
+        if (pemonlistEnabled) IntegratedDemonlist::loadPemonlist(&m_pemonlistListener, [this] {
             m_page = 0;
             populateList(m_searchBarText);
         }, failure(true));
-        else IntegratedDemonlist::loadAREDL(&m_aredlListener, &m_aredlOkListener, [this] {
+        else IntegratedDemonlist::loadAREDL(&m_aredlListener, [this] {
             m_page = 0;
             populateList(m_searchBarText);
         }, failure(false));
@@ -406,7 +414,6 @@ void IDListLayer::setIDPopupClosed(SetIDPopup*, int page) {
 }
 
 IDListLayer::~IDListLayer() {
-    CC_SAFE_RELEASE(m_loadingCircle);
     auto glm = GameLevelManager::get();
     if (glm->m_levelManagerDelegate == this) glm->m_levelManagerDelegate = nullptr;
 }

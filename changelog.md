@@ -1,4 +1,8 @@
 # Integrated Demonlist Changelog
+## v1.7.7 (2025-05-28)
+- Switched to AREDL API v2
+- Fixed a bug where the game would crash when trying to load the demonlist if the AREDL API was down
+
 ## v1.7.6 (2025-04-04)
 - Added support for iOS
 - Fixed a bug where the page label would be incorrect when viewing a demon pack

@@ -5,8 +5,8 @@
 
 using namespace geode::prelude;
 
-#define AREDL_LEVEL_URL "https://api.aredl.net/api/aredl/levels/{}"
-#define AREDL_LEVEL_2P_URL "https://api.aredl.net/api/aredl/levels/{}?two_player=true"
+#define AREDL_LEVEL_URL "https://api.aredl.net/v2/api/aredl/levels/{}"
+#define AREDL_LEVEL_2P_URL "https://api.aredl.net/v2/api/aredl/levels/{}_2p"
 #define PEMONLIST_LEVEL_URL "https://pemonlist.com/api/level/{}?version=2"
 
 class $modify(IDLevelCell, LevelCell) {
@@ -20,36 +20,31 @@ class $modify(IDLevelCell, LevelCell) {
     static void onModify(ModifyBase<ModifyDerive<IDLevelCell, LevelCell>>& self) {
         (void)self.setHookPriorityAfterPost("LevelCell::loadFromLevel", "hiimjustin000.level_size");
 
-        (void)self.getHook("LevelCell::loadFromLevel").map([](Hook* hook) {
+        (void)self.getHook("LevelCell::loadFromLevel").inspect([](Hook* hook) {
             auto mod = Mod::get();
             hook->setAutoEnable(mod->getSettingValue<bool>("enable-rank"));
 
             listenForSettingChangesV3<bool>("enable-rank", [hook](bool value) {
-                (void)(value ? hook->enable().mapErr([](const std::string& err) {
-                    return log::error("Failed to enable LevelCell::loadFromLevel hook: {}", err), err;
-                }) : hook->disable().mapErr([](const std::string& err) {
-                    return log::error("Failed to disable LevelCell::loadFromLevel hook: {}", err), err;
+                (void)(value ? hook->enable().inspectErr([](const std::string& err) {
+                    log::error("Failed to enable LevelCell::loadFromLevel hook: {}", err);
+                }) : hook->disable().inspectErr([](const std::string& err) {
+                    log::error("Failed to disable LevelCell::loadFromLevel hook: {}", err);
                 }));
             }, mod);
-
-            return hook;
-        }).mapErr([](const std::string& err) {
-            return log::error("Failed to get LevelCell::loadFromLevel hook: {}", err), err;
-        });
+        }).inspectErr([](const std::string& err) { log::error("Failed to get LevelCell::loadFromLevel hook: {}", err); });
     }
 
     void loadFromLevel(GJGameLevel* level) {
         LevelCell::loadFromLevel(level);
 
-        if (level->m_levelType == GJLevelType::Editor || level->m_demon.value() <= 0 || (level->m_levelLength != 5 && level->m_demonDifficulty < 6) ||
+        if (level->m_levelType == GJLevelType::Editor || level->m_demon.value() <= 0 ||
+            (level->m_levelLength != 5 && level->m_demonDifficulty < 6) ||
             (level->m_levelLength == 5 && level->m_demonDifficulty != 0 && level->m_demonDifficulty < 5)) return;
 
         auto platformer = level->m_levelLength == 5;
         auto levelID = level->m_levelID.value();
-        auto positions = ranges::reduce<std::vector<std::string>>(platformer ? IntegratedDemonlist::pemonlist : IntegratedDemonlist::aredl,
-            [levelID](std::vector<std::string>& acc, const IDListDemon& demon) {
-                if (demon.id == levelID) acc.push_back(std::to_string(demon.position));
-            });
+        auto positions = ranges::reduce<std::vector<int>>(platformer ? IntegratedDemonlist::pemonlist : IntegratedDemonlist::aredl,
+            [levelID](std::vector<int>& acc, const IDListDemon& demon) { if (demon.id == levelID) acc.push_back(demon.position); });
         if (!positions.empty()) return addRank(positions, platformer);
 
         if (loadedDemons.contains(levelID)) return;
@@ -64,25 +59,25 @@ class $modify(IDLevelCell, LevelCell) {
                 auto key = platformer ? "placement" : "position";
                 if (!json.isObject() || !json.contains(key) || !json[key].isNumber()) return;
 
-                int position1 = json[key].asInt().unwrap();
+                auto position1 = json[key].as<int>().unwrap();
                 if (platformer && position1 > 150) return;
 
                 auto& list = platformer ? IntegratedDemonlist::pemonlist : IntegratedDemonlist::aredl;
                 std::string levelName = level->m_levelName;
-                list.push_back({ levelID, levelName, position1 });
-                if (platformer) return addRank({ std::to_string(position1) }, platformer);
+                list.push_back({ levelID, position1, levelName });
+                if (platformer || !level->m_twoPlayerMode) return addRank({ position1 }, platformer);
 
                 auto f = m_fields.self();
                 f->m_dualListener.bind([this, levelID, levelName, position1](web::WebTask::Event* e) {
                     if (auto res = e->getValue()) {
-                        if (!res->ok()) return addRank({ std::to_string(position1) }, false);
+                        if (!res->ok()) return addRank({ position1 }, false);
 
                         auto json = res->json().unwrapOr(matjson::Value());
                         if (!json.isObject() || !json.contains("position") || !json["position"].isNumber()) return;
 
-                        int position2 = json["position"].asInt().unwrap();
-                        IntegratedDemonlist::aredl.push_back({ levelID, levelName, position2 });
-                        addRank({ std::to_string(position1), std::to_string(position2) }, false);
+                        auto position2 = json["position"].as<int>().unwrap();
+                        IntegratedDemonlist::aredl.push_back({ levelID, position2, levelName});
+                        addRank({ position1, position2 }, false);
                     }
                 });
 
@@ -94,22 +89,29 @@ class $modify(IDLevelCell, LevelCell) {
             web::WebRequest().get(platformer ? fmt::format(PEMONLIST_LEVEL_URL, levelID) : fmt::format(AREDL_LEVEL_URL, levelID)));
     }
 
-    void addRank(const std::vector<std::string>& positions, bool platformer) {
-        auto rankTextNode = CCLabelBMFont::create(
-            fmt::format("#{} {}", string::join(positions, "/#"), platformer ? "Pemonlist" : "AREDL").c_str(), "chatFont.fnt");
+    void addRank(const std::vector<int>& positions, bool platformer) {
         auto dailyLevel = m_level->m_dailyID.value() > 0;
-        rankTextNode->setPosition({ 346.0f, dailyLevel ? 6.0f : 1.0f });
+        auto isWhite = dailyLevel || Mod::get()->getSettingValue<bool>("white-rank");
+
+        auto rankTextNode = CCLabelBMFont::create(fmt::format("#{} {}",
+            ranges::reduce<std::string>(positions, [](std::string& acc, int pos) { acc += (acc.empty() ? "" : "/#") + fmt::to_string(pos); }),
+            platformer ? "Pemonlist" : "AREDL"
+        ).c_str(), "chatFont.fnt");
+        rankTextNode->setPosition({ 346.0f, 1.0f + dailyLevel * 5.0f });
         rankTextNode->setAnchorPoint({ 1.0f, 0.0f });
-        rankTextNode->setScale(m_compactView ? 0.45f : 0.6f);
-        auto isWhite = Mod::get()->getSettingValue<bool>("white-rank");
-        rankTextNode->setColor(dailyLevel || isWhite ? ccColor3B { 255, 255, 255 } : ccColor3B { 51, 51, 51 });
-        rankTextNode->setOpacity(dailyLevel || isWhite ? 200 : 152);
+        rankTextNode->setScale(0.6f - m_compactView * 0.15f);
+        rankTextNode->setColor({
+            (uint8_t)(51 * (isWhite * 4 + 1)),
+            (uint8_t)(51 * (isWhite * 4 + 1)),
+            (uint8_t)(51 * (isWhite * 4 + 1))
+        });
+        rankTextNode->setOpacity(200 - isWhite * 48);
         rankTextNode->setID("level-rank-label"_spr);
         m_mainLayer->addChild(rankTextNode);
 
         if (auto levelSizeLabel = m_mainLayer->getChildByID("hiimjustin000.level_size/size-label")) levelSizeLabel->setPosition({
-            346.0f - (m_compactView ? rankTextNode->getScaledContentWidth() + 3.0f : 0.0f),
-            !m_compactView ? 12.0f : 1.0f
+            346.0f - m_compactView * (rankTextNode->getScaledContentWidth() + 3.0f),
+            12.0f - m_compactView * 11.0f
         });
     }
 };

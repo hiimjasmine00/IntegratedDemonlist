@@ -3,10 +3,6 @@
 #include <Geode/ui/TextInput.hpp>
 
 class IDPackLayer : public cocos2d::CCLayer, SetIDPopupDelegate {
-private:
-    inline static constexpr const char* aredlPackInfo =
-        "The <cg>All Rated Extreme Demons List</c> (<cg>AREDL</c>) has <cp>packs</c> of <cr>extreme demons</c> that are <cj>related</c> in some way.\n"
-        "If all levels in a pack are <cl>completed</c>, the pack can earn <cy>points</c> on <cg>aredl.net</c>.";
 public:
     static IDPackLayer* create();
     static cocos2d::CCScene* scene();
@@ -19,7 +15,6 @@ public:
     ~IDPackLayer() override;
 protected:
     geode::EventListener<geode::utils::web::WebTask> m_aredlListener;
-    geode::EventListener<geode::utils::web::WebTask> m_aredlOkListener;
     GJListLayer* m_list;
     cocos2d::CCLabelBMFont* m_listLabel;
     LoadingCircle* m_loadingCircle;
