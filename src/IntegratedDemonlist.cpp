@@ -3,13 +3,13 @@
 
 using namespace geode::prelude;
 
+#define AREDL_UPTIME_URL "https://api.aredl.net/v2/api/health"
 #define AREDL_URL "https://api.aredl.net/v2/api/aredl/levels"
 #define AREDL_PACKS_URL "https://api.aredl.net/v2/api/aredl/pack-tiers"
 #define PEMONLIST_UPTIME_URL "https://pemonlist.com/api/uptime?version=2"
 #define PEMONLIST_URL "https://pemonlist.com/api/list?limit=150&version=2"
 
-void isOk(std::string_view url, EventListener<web::WebTask>* listener, bool head, std::function<void(bool, int)> callback) {
-    if (!head) return callback(true, 200);
+void isOk(std::string_view url, EventListener<web::WebTask>* listener, std::function<void(bool, int)> callback) {
     listener->bind([callback = std::move(callback)](web::WebTask::Event* e) {
         if (auto res = e->getValue()) callback(res->ok(), res->code());
     });
@@ -20,7 +20,7 @@ using ListDemons = std::vector<IDListDemon>;
 using DemonPacks = std::vector<IDDemonPack>;
 
 void IntegratedDemonlist::loadAREDL(EventListener<web::WebTask>* listener, std::function<void()> success, std::function<void(int)> failure) {
-    isOk(AREDL_URL, listener, false, [list = listener, failure = std::move(failure), success = std::move(success)](bool ok, int code) {
+    isOk(AREDL_UPTIME_URL, listener, [list = listener, failure = std::move(failure), success = std::move(success)](bool ok, int code) {
         if (!ok) return failure(code);
 
         auto listener = list;
@@ -56,7 +56,7 @@ void IntegratedDemonlist::loadAREDL(EventListener<web::WebTask>* listener, std::
 }
 
 void IntegratedDemonlist::loadAREDLPacks(EventListener<web::WebTask>* listener, std::function<void()> success, std::function<void(int)> failure) {
-    isOk(AREDL_PACKS_URL, listener, false, [list = listener, failure = std::move(failure), success = std::move(success)](bool ok, int code) {
+    isOk(AREDL_UPTIME_URL, listener, [list = listener, failure = std::move(failure), success = std::move(success)](bool ok, int code) {
         if (!ok) return failure(code);
 
         auto listener = list;
@@ -103,7 +103,7 @@ void IntegratedDemonlist::loadAREDLPacks(EventListener<web::WebTask>* listener, 
 }
 
 void IntegratedDemonlist::loadPemonlist(EventListener<web::WebTask>* listener, std::function<void()> success, std::function<void(int)> failure) {
-    isOk(PEMONLIST_UPTIME_URL, listener, true, [list = listener, failure = std::move(failure), success = std::move(success)](bool ok, int code) {
+    isOk(PEMONLIST_UPTIME_URL, listener, [list = listener, failure = std::move(failure), success = std::move(success)](bool ok, int code) {
         if (!ok) return failure(code);
 
         auto listener = list;
