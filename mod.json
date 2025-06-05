@@ -6,11 +6,11 @@
         "mac": "2.2074",
         "ios": "2.2074"
     },
-    "version": "v1.7.8",
+    "version": "v1.7.9",
     "id": "hiimjustin000.integrated_demonlist",
     "name": "Integrated Demonlist",
     "developer": "hiimjasmine00",
-    "description": "A mod that integrates aredl.net and pemonlist.com into Geometry Dash.",
+    "description": "Simple AREDL and Pemonlist integration.",
     "resources": {
         "sprites": [
             "resources/*.png"

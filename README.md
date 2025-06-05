@@ -1,5 +1,5 @@
 # Integrated Demonlist
-A mod that integrates [aredl.net](https://aredl.net) and [pemonlist.com](https://pemonlist.com) into Geometry Dash.
+Simple [AREDL](https://aredl.net) and [Pemonlist](https://pemonlist.com) integration.
 
 # Features
 - A new button in the level search screen that opens the demon list

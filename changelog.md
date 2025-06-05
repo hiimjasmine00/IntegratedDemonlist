@@ -1,4 +1,7 @@
 # Integrated Demonlist Changelog
+## v1.7.9 (2025-06-04)
+- Fixed a bug where the level cell positions would sometimes stack on top of each other
+
 ## v1.7.8 (2025-05-28)
 - Added support for the AREDL uptime endpoint
 
