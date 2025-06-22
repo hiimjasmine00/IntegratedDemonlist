@@ -9,7 +9,7 @@ endif()
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(GEODE_DISABLE_PRECOMPILED_HEADERS ON)
 
-project(IntegratedDemonlist VERSION 1.7.9)
+project(IntegratedDemonlist VERSION 1.7.10)
 
 add_library(${PROJECT_NAME} SHARED
     src/classes/IDListLayer.cpp
