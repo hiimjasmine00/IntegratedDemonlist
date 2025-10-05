@@ -13,9 +13,10 @@ class $modify(IDLevelSearchLayer, LevelSearchLayer) {
         demonlistButtonSprite->setScale(0.8f);
         auto demonlistButton = CCMenuItemSpriteExtra::create(demonlistButtonSprite, this, menu_selector(IDLevelSearchLayer::onDemonlistLevels));
         demonlistButton->setID("demonlist-button"_spr);
-        auto menu = getChildByID("other-filter-menu");
-        menu->addChild(demonlistButton);
-        menu->updateLayout();
+        if (auto menu = getChildByID("other-filter-menu")) {
+            menu->addChild(demonlistButton);
+            menu->updateLayout();
+        }
 
         return true;
     }

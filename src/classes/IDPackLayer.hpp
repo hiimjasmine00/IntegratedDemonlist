@@ -11,8 +11,6 @@ public:
     void page(int);
     void keyDown(cocos2d::enumKeyCodes) override;
     void keyBackClicked() override;
-
-    ~IDPackLayer() override;
 protected:
     geode::EventListener<geode::utils::web::WebTask> m_aredlListener;
     GJListLayer* m_list;
@@ -29,14 +27,13 @@ protected:
     CCMenuItemSpriteExtra* m_randomButton;
     CCMenuItemSpriteExtra* m_firstButton;
     CCMenuItemSpriteExtra* m_lastButton;
+    CCMenuItemSpriteExtra* m_searchButton;
     int m_page = 0;
-    std::string m_query = "";
-    std::string m_searchBarText = "";
+    std::string m_query;
     std::vector<IDDemonPack> m_fullSearchResults;
 
     bool init() override;
     std::function<void(int)> failure();
-    void addSearchBar();
     void showLoading();
     void populateList(const std::string& query);
     void setIDPopupClosed(SetIDPopup*, int) override;

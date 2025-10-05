@@ -1,5 +1,5 @@
-#include <Geode/binding/SetIDPopupDelegate.hpp>
 #include <Geode/binding/LevelManagerDelegate.hpp>
+#include <Geode/binding/SetIDPopupDelegate.hpp>
 #include <Geode/ui/TextInput.hpp>
 #include <Geode/utils/web.hpp>
 
@@ -34,14 +34,13 @@ protected:
     CCMenuItemSpriteExtra* m_lastButton;
     CCMenuItemSpriteExtra* m_starToggle;
     CCMenuItemSpriteExtra* m_moonToggle;
+    CCMenuItemSpriteExtra* m_searchButton;
     int m_page = 0;
     std::string m_query;
-    std::string m_searchBarText;
     std::vector<std::string> m_fullSearchResults;
 
     bool init() override;
     std::function<void(int)> failure(bool);
-    void addSearchBar();
     void showLoading();
     void populateList(const std::string& query);
     void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override;

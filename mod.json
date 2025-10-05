@@ -1,17 +1,21 @@
 {
-    "geode": "4.6.1",
+    "geode": "4.9.0",
     "gd": {
         "android": "2.2074",
         "win": "2.2074",
         "mac": "2.2074",
         "ios": "2.2074"
     },
-    "version": "v1.7.10",
+    "version": "v1.7.11",
     "id": "hiimjustin000.integrated_demonlist",
     "name": "Integrated Demonlist",
     "developer": "hiimjasmine00",
     "description": "Simple AREDL and Pemonlist integration.",
     "resources": {
+        "files": [
+            "resources/*.frag",
+            "resources/*.vert"
+        ],
         "sprites": [
             "resources/*.png"
         ]
