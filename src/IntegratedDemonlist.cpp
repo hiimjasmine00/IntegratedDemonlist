@@ -20,24 +20,16 @@ void IntegratedDemonlist::loadAREDL(EventListener<web::WebTask>& listener, std::
             if (!json.isOk()) return success();
 
             for (auto& level : json.unwrap()) {
-                auto legacy = level.get("legacy").andThen([](const matjson::Value& v) {
-                    return v.asBool();
-                });
+                auto legacy = level.get<bool>("legacy");
                 if (legacy.isOk() && legacy.unwrap()) continue;
 
-                auto id = level.get("level_id").andThen([](const matjson::Value& v) {
-                    return v.as<int>();
-                });
+                auto id = level.get<int>("level_id");
                 if (!id.isOk()) continue;
 
-                auto position = level.get("position").andThen([](const matjson::Value& v) {
-                    return v.as<int>();
-                });
+                auto position = level.get<int>("position");
                 if (!position.isOk()) continue;
 
-                auto name = level.get("name").andThen([](const matjson::Value& v) {
-                    return v.asString();
-                });
+                auto name = level.get<std::string>("name");
                 if (!name.isOk()) continue;
 
                 IDListDemon demon(id.unwrap(), position.unwrap(), std::move(name).unwrap());
@@ -67,43 +59,29 @@ void IntegratedDemonlist::loadAREDLPacks(EventListener<web::WebTask>& listener, 
             if (!json.isOk()) return success();
 
             for (auto& tier : json.unwrap()) {
-                auto placement = tier.get("placement").andThen([](const matjson::Value& v) {
-                    return v.as<int>();
-                });
+                auto placement = tier.get<int>("placement");
                 if (!placement.isOk()) continue;
 
-                auto tierName = tier.get("name").andThen([](const matjson::Value& v) {
-                    return v.asString();
-                });
+                auto tierName = tier.get<std::string>("name");
                 if (!tierName.isOk()) continue;
 
-                auto packs = tier.get("packs").andThen([](const matjson::Value& v) {
-                    return v.asArray();
-                });
+                auto packs = tier.get<std::vector<matjson::Value>>("packs");
                 if (!packs.isOk()) continue;
 
                 for (auto& pack : packs.unwrap()) {
-                    auto levelsRes = pack.get("levels").andThen([](const matjson::Value& v) {
-                        return v.asArray();
-                    });
+                    auto levelsRes = pack.get<std::vector<matjson::Value>>("levels");
                     if (!levelsRes.isOk()) continue;
 
-                    auto name = pack.get("name").andThen([](const matjson::Value& v) {
-                        return v.asString();
-                    });
+                    auto name = pack.get<std::string>("name");
                     if (!name.isOk()) continue;
 
-                    auto points = pack.get("points").andThen([](const matjson::Value& v) {
-                        return v.asDouble();
-                    });
+                    auto points = pack.get<double>("points");
                     if (!points.isOk()) continue;
 
                     std::vector<int> levels;
                     auto packValid = true;
                     for (auto& level : levelsRes.unwrap()) {
-                        auto id = level.get("level_id").andThen([](const matjson::Value& v) {
-                            return v.as<int>();
-                        });
+                        auto id = level.get<int>("level_id");
                         if (id.isOk()) levels.push_back(id.unwrap());
                         else {
                             packValid = false;
@@ -146,19 +124,13 @@ void IntegratedDemonlist::loadPemonlist(EventListener<web::WebTask>& listener, s
             if (!json.isOk()) return success();
 
             for (auto& level : json.unwrap()) {
-                auto id = level.get("level_id").andThen([](const matjson::Value& v) {
-                    return v.as<int>();
-                });
+                auto id = level.get<int>("level_id");
                 if (!id.isOk()) continue;
 
-                auto position = level.get("placement").andThen([](const matjson::Value& v) {
-                    return v.as<int>();
-                });
+                auto position = level.get<int>("placement");
                 if (!position.isOk()) continue;
 
-                auto name = level.get("name").andThen([](const matjson::Value& v) {
-                    return v.asString();
-                });
+                auto name = level.get<std::string>("name");
                 if (!name.isOk()) continue;
 
                 IDListDemon demon(id.unwrap(), position.unwrap(), std::move(name).unwrap());

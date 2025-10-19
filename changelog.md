@@ -1,4 +1,7 @@
 # Integrated Demonlist Changelog
+## v1.7.12 (2025-10-19)
+- Fixed a bug where the second placement of two-player demons would be incorrect
+
 ## v1.7.11 (2025-10-04)
 - Added AREDL pack backgrounds
 - Added compatibility with the mod "Revised Level Cells" by Erymanthus/RayDeeUx

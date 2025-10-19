@@ -63,9 +63,7 @@ class $modify(IDLevelCell, LevelCell) {
                 auto json = res->json();
                 if (!json.isOk()) return;
 
-                auto position = json.unwrap().get(platformer ? "placement" : "position").andThen([](const matjson::Value& v) {
-                    return v.as<int>();
-                });
+                auto position = json.unwrap().get<int>(platformer ? "placement" : "position");
                 if (!position.isOk()) return;
 
                 auto position1 = position.unwrap();
@@ -90,9 +88,7 @@ class $modify(IDLevelCell, LevelCell) {
                         auto json = res->json();
                         if (!json.isOk()) return addRank(positions);
 
-                        auto position = json.unwrap().get("placement").andThen([](const matjson::Value& v) {
-                            return v.as<int>();
-                        });
+                        auto position = json.unwrap().get<int>("position");
                         if (!position.isOk()) return addRank(positions);
 
                         auto position2 = position.unwrap();
