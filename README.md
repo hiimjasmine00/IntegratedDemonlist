@@ -16,9 +16,11 @@ Simple [AREDL](https://aredl.net) and [Pemonlist](https://pemonlist.com) integra
 - [hiimjasmine00](https://gdbrowser.com/u/7466002) - Creator of the mod
 
 ## Gallery
-![AREDL](./resources/aredl.png)\
-![Pemonlist](./resources/pemonlist.png)\
-![AREDL Packs](./resources/aredl-packs.png)
+![AREDL](https://raw.githubusercontent.com/hiimjasmine00/IntegratedDemonlist/refs/heads/master/resources/aredl.png)
+
+![Pemonlist](https://raw.githubusercontent.com/hiimjasmine00/IntegratedDemonlist/refs/heads/master/resources/pemonlist.png)
+
+![AREDL Packs](https://raw.githubusercontent.com/hiimjasmine00/IntegratedDemonlist/refs/heads/master/resources/aredl-packs.png)
 
 ## License
 This mod is licensed under the [MIT License](https://github.com/hiimjasmine00/IntegratedDemonlist/blob/master/LICENSE).

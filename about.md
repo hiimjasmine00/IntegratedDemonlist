@@ -16,8 +16,10 @@ Simple [AREDL](https://aredl.net) and [Pemonlist](https://pemonlist.com) integra
 - [hiimjasmine00](user:7466002) - Creator of the mod
 
 ## Gallery
-![AREDL](hiimjustin000.integrated_demonlist/aredl.png?width=300)\
-![Pemonlist](hiimjustin000.integrated_demonlist/pemonlist.png?width=300)\
+![AREDL](hiimjustin000.integrated_demonlist/aredl.png?width=300)
+
+![Pemonlist](hiimjustin000.integrated_demonlist/pemonlist.png?width=300)
+
 ![AREDL Packs](hiimjustin000.integrated_demonlist/aredl-packs.png?width=300)
 
 ## License

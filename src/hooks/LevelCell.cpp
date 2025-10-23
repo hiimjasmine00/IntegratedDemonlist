@@ -4,9 +4,9 @@
 
 using namespace geode::prelude;
 
-#define AREDL_LEVEL_URL "https://api.aredl.net/v2/api/aredl/levels/{}"
-#define AREDL_LEVEL_2P_URL "https://api.aredl.net/v2/api/aredl/levels/{}_2p"
-#define PEMONLIST_LEVEL_URL "https://pemonlist.com/api/level/{}?version=2"
+constexpr const char* aredlLevelUrl = "https://api.aredl.net/v2/api/aredl/levels/{}";
+constexpr const char* aredlLevel2pUrl = "https://api.aredl.net/v2/api/aredl/levels/{}_2p";
+constexpr const char* pemonlistLevelUrl = "https://pemonlist.com/api/level/{}?version=2";
 
 class $modify(IDLevelCell, LevelCell) {
     struct Fields {
@@ -24,8 +24,8 @@ class $modify(IDLevelCell, LevelCell) {
             hook->setAutoEnable(mod->getSettingValue<bool>("enable-rank"));
 
             listenForSettingChangesV3<bool>("enable-rank", [hook](bool value) {
-                if (auto res = hook->toggle(value); res.isErr()) {
-                    log::error("Failed to toggle LevelCell::loadFromLevel hook: {}", res.unwrapErr());
+                if (auto err = hook->toggle(value).err()) {
+                    log::error("Failed to toggle LevelCell::loadFromLevel hook: {}", *err);
                 }
             }, mod);
         }
@@ -78,7 +78,7 @@ class $modify(IDLevelCell, LevelCell) {
                 std::vector<int> positions = { position1 };
                 if (platformer || !twoPlayer) return addRank(positions);
 
-                auto url = fmt::format(AREDL_LEVEL_2P_URL, levelID);
+                auto url = fmt::format(aredlLevel2pUrl, levelID);
 
                 auto f = m_fields.self();
                 f->m_listener.bind([this, levelID, levelName, positions](web::WebTask::Event* e) mutable {
@@ -106,8 +106,7 @@ class $modify(IDLevelCell, LevelCell) {
             }
         });
 
-        f->m_listener.setFilter(
-            web::WebRequest().get(platformer ? fmt::format(PEMONLIST_LEVEL_URL, levelID) : fmt::format(AREDL_LEVEL_URL, levelID)));
+        f->m_listener.setFilter(web::WebRequest().get(platformer ? fmt::format(pemonlistLevelUrl, levelID) : fmt::format(aredlLevelUrl, levelID)));
     }
 
     void addRank(const std::vector<int>& positions) {

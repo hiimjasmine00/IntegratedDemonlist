@@ -2,9 +2,15 @@
 
 using namespace geode::prelude;
 
-#define AREDL_URL "https://api.aredl.net/v2/api/aredl/levels"
-#define AREDL_PACKS_URL "https://api.aredl.net/v2/api/aredl/pack-tiers"
-#define PEMONLIST_URL "https://pemonlist.com/api/list?limit=150&version=2"
+std::vector<IDListDemon> IntegratedDemonlist::aredl;
+std::vector<IDDemonPack> IntegratedDemonlist::aredlPacks;
+std::vector<IDListDemon> IntegratedDemonlist::pemonlist;
+bool IntegratedDemonlist::aredlLoaded = false;
+bool IntegratedDemonlist::pemonlistLoaded = false;
+
+constexpr const char* aredlUrl = "https://api.aredl.net/v2/api/aredl/levels";
+constexpr const char* aredlPacksUrl = "https://api.aredl.net/v2/api/aredl/pack-tiers";
+constexpr const char* pemonlistUrl = "https://pemonlist.com/api/list?limit=150&version=2";
 
 void IntegratedDemonlist::loadAREDL(EventListener<web::WebTask>& listener, std::function<void()> success, std::function<void(int)> failure) {
     listener.bind([failure = std::move(failure), success = std::move(success)](web::WebTask::Event* e) {
@@ -14,12 +20,13 @@ void IntegratedDemonlist::loadAREDL(EventListener<web::WebTask>& listener, std::
             aredlLoaded = true;
             aredl.clear();
 
-            auto json = res->json().andThen([](matjson::Value&& v) {
-                return std::move(v).asArray();
-            });
+            auto json = res->json();
             if (!json.isOk()) return success();
 
-            for (auto& level : json.unwrap()) {
+            auto vec = std::move(json).unwrap().asArray();
+            if (!vec.isOk()) return success();
+
+            for (auto& level : vec.unwrap()) {
                 auto legacy = level.get<bool>("legacy");
                 if (legacy.isOk() && legacy.unwrap()) continue;
 
@@ -43,7 +50,7 @@ void IntegratedDemonlist::loadAREDL(EventListener<web::WebTask>& listener, std::
         }
     });
 
-    listener.setFilter(web::WebRequest().get(AREDL_URL));
+    listener.setFilter(web::WebRequest().get(aredlUrl));
 }
 
 void IntegratedDemonlist::loadAREDLPacks(EventListener<web::WebTask>& listener, std::function<void()> success, std::function<void(int)> failure) {
@@ -53,12 +60,13 @@ void IntegratedDemonlist::loadAREDLPacks(EventListener<web::WebTask>& listener, 
 
             aredlPacks.clear();
 
-            auto json = res->json().andThen([](matjson::Value&& v) {
-                return std::move(v).asArray();
-            });
+            auto json = res->json();
             if (!json.isOk()) return success();
 
-            for (auto& tier : json.unwrap()) {
+            auto vec = std::move(json).unwrap().asArray();
+            if (!vec.isOk()) return success();
+
+            for (auto& tier : vec.unwrap()) {
                 auto placement = tier.get<int>("placement");
                 if (!placement.isOk()) continue;
 
@@ -105,7 +113,7 @@ void IntegratedDemonlist::loadAREDLPacks(EventListener<web::WebTask>& listener, 
         }
     });
 
-    listener.setFilter(web::WebRequest().get(AREDL_PACKS_URL));
+    listener.setFilter(web::WebRequest().get(aredlPacksUrl));
 }
 
 void IntegratedDemonlist::loadPemonlist(EventListener<web::WebTask>& listener, std::function<void()> success, std::function<void(int)> failure) {
@@ -116,14 +124,16 @@ void IntegratedDemonlist::loadPemonlist(EventListener<web::WebTask>& listener, s
             pemonlistLoaded = true;
             pemonlist.clear();
 
-            auto json = res->json().andThen([](matjson::Value&& v) {
-                return v.get("data").andThen([](matjson::Value& v) {
-                    return std::move(v).asArray();
-                });
-            });
+            auto json = res->json();
             if (!json.isOk()) return success();
 
-            for (auto& level : json.unwrap()) {
+            auto data = json.unwrap().get("data");
+            if (!data.isOk()) return success();
+
+            auto vec = std::move(data).unwrap().asArray();
+            if (!vec.isOk()) return success();
+
+            for (auto& level : vec.unwrap()) {
                 auto id = level.get<int>("level_id");
                 if (!id.isOk()) continue;
 
@@ -144,5 +154,5 @@ void IntegratedDemonlist::loadPemonlist(EventListener<web::WebTask>& listener, s
         }
     });
 
-    listener.setFilter(web::WebRequest().get(PEMONLIST_URL));
+    listener.setFilter(web::WebRequest().get(pemonlistUrl));
 }

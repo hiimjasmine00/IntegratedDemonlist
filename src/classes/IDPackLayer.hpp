@@ -31,9 +31,9 @@ protected:
     int m_page = 0;
     std::string m_query;
     std::vector<IDDemonPack> m_fullSearchResults;
+    std::function<void(int)> m_aredlFailure;
 
     bool init() override;
-    std::function<void(int)> failure();
     void showLoading();
     void populateList(const std::string& query);
     void setIDPopupClosed(SetIDPopup*, int) override;

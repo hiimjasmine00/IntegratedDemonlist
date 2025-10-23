@@ -38,9 +38,10 @@ protected:
     int m_page = 0;
     std::string m_query;
     std::vector<std::string> m_fullSearchResults;
+    std::function<void(int)> m_aredlFailure;
+    std::function<void(int)> m_pemonlistFailure;
 
     bool init() override;
-    std::function<void(int)> failure(bool);
     void showLoading();
     void populateList(const std::string& query);
     void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override;

@@ -11,15 +11,9 @@ set(GEODE_DISABLE_PRECOMPILED_HEADERS ON)
 
 project(IntegratedDemonlist VERSION 1.7.12)
 
-add_library(${PROJECT_NAME} SHARED
-    src/classes/IDListLayer.cpp
-    src/classes/IDPackCell.cpp
-    src/classes/IDPackLayer.cpp
-    src/hooks/LevelBrowserLayer.cpp
-    src/hooks/LevelCell.cpp
-    src/hooks/LevelSearchLayer.cpp
-    src/IntegratedDemonlist.cpp
-)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 if (NOT DEFINED ENV{GEODE_SDK})
     message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")

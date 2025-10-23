@@ -141,18 +141,28 @@ bool IDListLayer::init() {
     m_infoButton->setID("info-button");
     menu->addChild(m_infoButton, 2);
 
+    m_aredlFailure = [this](int code) {
+        FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load AREDL. Please try again later.", "OK")->show();
+        m_loadingCircle->setVisible(false);
+    };
+
+    m_pemonlistFailure = [this](int code) {
+        FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load Pemonlist. Please try again later.", "OK")->show();
+        m_loadingCircle->setVisible(false);
+    };
+
     auto refreshBtnSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     auto refreshButton = CCMenuItemExt::createSpriteExtra(refreshBtnSpr, [this](auto) {
         showLoading();
         if (pemonlistEnabled) {
             IntegratedDemonlist::loadPemonlist(m_pemonlistListener, [this] {
                 populateList(m_query);
-            }, failure(true));
+            }, m_pemonlistFailure);
         }
         else {
             IntegratedDemonlist::loadAREDL(m_aredlListener, [this] {
                 populateList(m_query);
-            }, failure(false));
+            }, m_aredlFailure);
         }
     });
     refreshButton->setPosition({ winSize.width - refreshBtnSpr->getContentWidth() / 2.0f - 4.0f, refreshBtnSpr->getContentHeight() / 2.0f + 4.0f });
@@ -178,7 +188,7 @@ bool IDListLayer::init() {
         else {
             IntegratedDemonlist::loadAREDL(m_aredlListener, [this] {
                 page(0);
-            }, failure(false));
+            }, m_aredlFailure);
         }
     });
     m_starToggle->setPosition({ 30.0f, 60.0f });
@@ -205,7 +215,7 @@ bool IDListLayer::init() {
         else {
             IntegratedDemonlist::loadPemonlist(m_pemonlistListener, [this] {
                 page(0);
-            }, failure(true));
+            }, m_pemonlistFailure);
         }
     });
     m_moonToggle->setPosition({ 60.0f, 60.0f });
@@ -284,7 +294,7 @@ bool IDListLayer::init() {
     else if (pemonlistEnabled) {
         IntegratedDemonlist::loadPemonlist(m_pemonlistListener, [this] {
             populateList("");
-        }, failure(true));
+        }, m_pemonlistFailure);
     }
     else if (IntegratedDemonlist::aredlLoaded) {
         populateList("");
@@ -292,22 +302,12 @@ bool IDListLayer::init() {
     else {
         IntegratedDemonlist::loadAREDL(m_aredlListener, [this] {
             populateList("");
-        }, failure(false));
+        }, m_aredlFailure);
     }
 
     return true;
 }
 
-std::function<void(int)> IDListLayer::failure(bool platformer) {
-    return [this, platformer](int code) {
-        FLAlertLayer::create(
-            fmt::format("Load Failed ({})", code).c_str(),
-            fmt::format("Failed to load {}. Please try again later.", platformer ? "Pemonlist" : "AREDL"),
-            "OK"
-        )->show();
-        m_loadingCircle->setVisible(false);
-    };
-}
 void IDListLayer::showLoading() {
     m_pageLabel->setString(fmt::to_string(m_page + 1).c_str());
     m_loadingCircle->setVisible(true);
@@ -357,7 +357,7 @@ void IDListLayer::populateList(const std::string& query) {
         #else
         auto& searchQuery = searchObject->m_searchQuery;
         #endif
-        auto end = m_fullSearchResults.begin() + std::min<int>(m_fullSearchResults.size(), (m_page + 1) * 10);
+        auto end = std::min(m_fullSearchResults.end(), m_fullSearchResults.begin() + (m_page + 1) * 10);
         for (auto it = m_fullSearchResults.begin() + m_page * 10; it < end; ++it) {
             if (!searchQuery.empty()) searchQuery += ',';
             searchQuery += *it;
@@ -420,13 +420,13 @@ void IDListLayer::search() {
             IntegratedDemonlist::loadPemonlist(m_pemonlistListener, [this, query] {
                 m_page = 0;
                 populateList(query);
-            }, failure(true));
+            }, m_pemonlistFailure);
         }
         else {
             IntegratedDemonlist::loadAREDL(m_aredlListener, [this, query] {
                 m_page = 0;
                 populateList(query);
-            }, failure(false));
+            }, m_aredlFailure);
         }
     }
 }

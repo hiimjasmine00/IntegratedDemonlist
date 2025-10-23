@@ -133,12 +133,17 @@ bool IDPackLayer::init() {
     infoButton->setID("info-button");
     menu->addChild(infoButton, 2);
 
+    m_aredlFailure = [this](int code) {
+        FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load AREDL packs. Please try again later.", "OK")->show();
+        m_loadingCircle->setVisible(false);
+    };
+
     auto refreshBtnSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     auto refreshButton = CCMenuItemExt::createSpriteExtra(refreshBtnSpr, [this](auto) {
         showLoading();
         IntegratedDemonlist::loadAREDLPacks(m_aredlListener, [this] {
             populateList(m_query);
-        }, failure());
+        }, m_aredlFailure);
     });
     refreshButton->setPosition(winSize.width - refreshBtnSpr->getContentWidth() / 2.0f - 4.0f, refreshBtnSpr->getContentHeight() / 2.0f + 4.0f);
     refreshButton->setID("refresh-button");
@@ -244,17 +249,10 @@ bool IDPackLayer::init() {
     else {
         IntegratedDemonlist::loadAREDLPacks(m_aredlListener, [this] {
             populateList("");
-        }, failure());
+        }, m_aredlFailure);
     }
 
     return true;
-}
-
-std::function<void(int)> IDPackLayer::failure() {
-    return [this](int code) {
-        FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load AREDL packs. Please try again later.", "OK")->show();
-        m_loadingCircle->setVisible(false);
-    };
 }
 
 void IDPackLayer::showLoading() {
@@ -331,7 +329,7 @@ void IDPackLayer::search() {
         IntegratedDemonlist::loadAREDLPacks(m_aredlListener, [this, query] {
             m_page = 0;
             populateList(query);
-        }, failure());
+        }, m_aredlFailure);
     }
 }
 
