@@ -1,9 +1,9 @@
 #include "IDPackCell.hpp"
 #include <Geode/binding/ButtonSprite.hpp>
 #include <Geode/binding/GameStatsManager.hpp>
-#include <Geode/binding/GJSearchObject.hpp>
 #include <Geode/binding/LevelBrowserLayer.hpp>
 #include <Geode/loader/Mod.hpp>
+#include <jasmine/search.hpp>
 
 using namespace geode::prelude;
 
@@ -61,18 +61,8 @@ bool IDPackCell::init(const std::string& name, double points, const std::vector<
     auto viewSprite = ButtonSprite::create("View", 50, 0, 0.6f, false, "bigFont.fnt", "GJ_button_01.png", 50.0f);
     auto viewMenu = CCMenu::create();
     auto viewButton = CCMenuItemExt::createSpriteExtra(viewSprite, [this, levels](auto) {
-        auto searchObject = GJSearchObject::create(SearchType::Type19);
-        #ifdef GEODE_IS_ANDROID
-        std::string searchQuery;
-        #else
-        auto& searchQuery = searchObject->m_searchQuery;
-        #endif
-        for (auto id : levels) {
-            if (!searchQuery.empty()) searchQuery += ',';
-            searchQuery += fmt::to_string(id);
-        }
-        GEODE_ANDROID(searchObject->m_searchQuery = searchQuery;)
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelBrowserLayer::scene(searchObject)));
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f,
+            LevelBrowserLayer::scene(jasmine::search::getObject(levels, &fmt::to_string<int>))));
     });
     viewButton->setID("view-button");
     viewMenu->addChild(viewButton);

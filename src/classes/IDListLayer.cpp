@@ -4,12 +4,12 @@
 #include <Geode/binding/CustomListView.hpp>
 #include <Geode/binding/GameLevelManager.hpp>
 #include <Geode/binding/GJListLayer.hpp>
-#include <Geode/binding/GJSearchObject.hpp>
 #include <Geode/binding/InfoAlertButton.hpp>
 #include <Geode/binding/LoadingCircle.hpp>
 #include <Geode/binding/SetIDPopup.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <random>
+#include <jasmine/random.hpp>
+#include <jasmine/search.hpp>
 
 using namespace geode::prelude;
 
@@ -239,8 +239,7 @@ bool IDListLayer::init() {
     menu->addChild(m_pageButton);
 
     m_randomButton = CCMenuItemExt::createSpriteExtraWithFilename("BI_randomBtn_001.png"_spr, 0.9f, [this](auto) {
-        static std::mt19937 mt(std::random_device{}());
-        page(std::uniform_int_distribution<int>(0, (m_fullSearchResults.size() - 1) / 10)(mt));
+        page(jasmine::random::getInt(0, (m_fullSearchResults.size() - 1) / 10));
     });
     m_randomButton->setPositionY(
         m_pageButton->getPositionY() - m_pageButton->getContentHeight() / 2.0f - m_randomButton->getContentHeight() / 2.0f - 5.0f);
@@ -351,21 +350,12 @@ void IDListLayer::populateList(const std::string& query) {
         auto glm = GameLevelManager::get();
         glm->m_levelManagerDelegate = this;
 
-        auto searchObject = GJSearchObject::create(SearchType::Type19);
-        #ifdef GEODE_IS_ANDROID
-        std::string searchQuery;
-        #else
-        auto& searchQuery = searchObject->m_searchQuery;
-        #endif
-        auto end = std::min(m_fullSearchResults.end(), m_fullSearchResults.begin() + (m_page + 1) * 10);
-        for (auto it = m_fullSearchResults.begin() + m_page * 10; it < end; ++it) {
-            if (!searchQuery.empty()) searchQuery += ',';
-            searchQuery += *it;
-        }
-        GEODE_ANDROID(searchObject->m_searchQuery = searchQuery;)
+        auto searchObject = jasmine::search::getObject(
+            m_fullSearchResults.begin() + m_page * 10,
+            std::min(m_fullSearchResults.end(), m_fullSearchResults.begin() + (m_page + 1) * 10)
+        );
 
-        std::string_view key = searchObject->getKey();
-        if (auto storedLevels = glm->getStoredOnlineLevels(key.substr(std::max<ptrdiff_t>(0, key.size() - 256)).data())) {
+        if (auto storedLevels = glm->getStoredOnlineLevels(jasmine::search::getKey(searchObject))) {
             loadLevelsFinished(storedLevels, "", 0);
             setupPageInfo("", "");
         }

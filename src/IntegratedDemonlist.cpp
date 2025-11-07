@@ -1,4 +1,5 @@
 #include "IntegratedDemonlist.hpp"
+#include <jasmine/web.hpp>
 
 using namespace geode::prelude;
 
@@ -20,13 +21,7 @@ void IntegratedDemonlist::loadAREDL(EventListener<web::WebTask>& listener, std::
             aredlLoaded = true;
             aredl.clear();
 
-            auto json = res->json();
-            if (!json.isOk()) return success();
-
-            auto vec = std::move(json).unwrap().asArray();
-            if (!vec.isOk()) return success();
-
-            for (auto& level : vec.unwrap()) {
+            for (auto& level : jasmine::web::getArray(res)) {
                 auto legacy = level.get<bool>("legacy");
                 if (legacy.isOk() && legacy.unwrap()) continue;
 
@@ -60,13 +55,7 @@ void IntegratedDemonlist::loadAREDLPacks(EventListener<web::WebTask>& listener, 
 
             aredlPacks.clear();
 
-            auto json = res->json();
-            if (!json.isOk()) return success();
-
-            auto vec = std::move(json).unwrap().asArray();
-            if (!vec.isOk()) return success();
-
-            for (auto& tier : vec.unwrap()) {
+            for (auto& tier : jasmine::web::getArray(res)) {
                 auto placement = tier.get<int>("placement");
                 if (!placement.isOk()) continue;
 
@@ -124,16 +113,7 @@ void IntegratedDemonlist::loadPemonlist(EventListener<web::WebTask>& listener, s
             pemonlistLoaded = true;
             pemonlist.clear();
 
-            auto json = res->json();
-            if (!json.isOk()) return success();
-
-            auto data = json.unwrap().get("data");
-            if (!data.isOk()) return success();
-
-            auto vec = std::move(data).unwrap().asArray();
-            if (!vec.isOk()) return success();
-
-            for (auto& level : vec.unwrap()) {
+            for (auto& level : jasmine::web::getArray(res, "data")) {
                 auto id = level.get<int>("level_id");
                 if (!id.isOk()) continue;
 

@@ -1,6 +1,8 @@
 #include "../IntegratedDemonlist.hpp"
 #include <Geode/binding/GJGameLevel.hpp>
 #include <Geode/modify/LevelCell.hpp>
+#include <jasmine/hook.hpp>
+#include <jasmine/setting.hpp>
 
 using namespace geode::prelude;
 
@@ -17,24 +19,13 @@ class $modify(IDLevelCell, LevelCell) {
 
     static void onModify(ModifyBase<ModifyDerive<IDLevelCell, LevelCell>>& self) {
         (void)self.setHookPriorityAfterPost("LevelCell::loadFromLevel", "hiimjustin000.level_size");
-
-        if (auto it = self.m_hooks.find("LevelCell::loadFromLevel"); it != self.m_hooks.end()) {
-            auto mod = Mod::get();
-            auto hook = it->second.get();
-            hook->setAutoEnable(mod->getSettingValue<bool>("enable-rank"));
-
-            listenForSettingChangesV3<bool>("enable-rank", [hook](bool value) {
-                if (auto err = hook->toggle(value).err()) {
-                    log::error("Failed to toggle LevelCell::loadFromLevel hook: {}", *err);
-                }
-            }, mod);
-        }
+        jasmine::hook::modify(self.m_hooks, "LevelCell::loadFromLevel", "enable-rank");
     }
 
     void loadFromLevel(GJGameLevel* level) {
         LevelCell::loadFromLevel(level);
 
-        auto platformer = level->m_levelLength == 5;
+        auto platformer = level->isPlatformer();
         auto difficulty = level->m_demonDifficulty;
         if (level->m_levelType == GJLevelType::Editor || level->m_demon.value() <= 0 ||
             (!platformer && difficulty < 6) || (platformer && difficulty != 0 && difficulty < 5)) return;
@@ -113,15 +104,17 @@ class $modify(IDLevelCell, LevelCell) {
         if (m_mainLayer->getChildByID("level-rank-label"_spr)) return;
 
         auto dailyLevel = m_level->m_dailyID.value() > 0;
-        auto isWhite = dailyLevel || Mod::get()->getSettingValue<bool>("white-rank");
+        auto isWhite = dailyLevel || jasmine::setting::getValue<bool>("white-rank");
 
-        std::string positionsStr;
-        for (auto pos : positions) {
-            if (!positionsStr.empty()) positionsStr += '/';
-            positionsStr += fmt::format("#{}", pos);
+        fmt::memory_buffer positionsStr;
+        for (auto it = positions.begin(); it != positions.end(); ++it) {
+            if (it != positions.begin()) positionsStr.push_back('/');
+            fmt::format_to(std::back_inserter(positionsStr), "#{}", *it);
         }
-        positionsStr += m_level->m_levelLength == 5 ? " Pemonlist" : " AREDL";
-        auto rankTextNode = CCLabelBMFont::create(positionsStr.c_str(), "chatFont.fnt");
+        if (m_level->isPlatformer()) fmt::format_to(std::back_inserter(positionsStr), " Pemonlist");
+        else fmt::format_to(std::back_inserter(positionsStr), " AREDL");
+
+        auto rankTextNode = CCLabelBMFont::create(fmt::to_string(positionsStr).c_str(), "chatFont.fnt");
         rankTextNode->setPosition({ 346.0f, dailyLevel ? 6.0f : 1.0f });
         rankTextNode->setAnchorPoint({ 1.0f, 0.0f });
         rankTextNode->setScale(m_compactView ? 0.45f : 0.6f);
@@ -133,7 +126,7 @@ class $modify(IDLevelCell, LevelCell) {
             rankTextNode->setOpacity(152);
         }
         else {
-            rankTextNode->setColor(ccColor3B { 51, 51, 51 });
+            rankTextNode->setColor({ 51, 51, 51 });
             rankTextNode->setOpacity(200);
         }
         rankTextNode->setID("level-rank-label"_spr);

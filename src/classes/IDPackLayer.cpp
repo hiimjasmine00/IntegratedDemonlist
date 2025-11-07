@@ -8,7 +8,7 @@
 #include <Geode/loader/Mod.hpp>
 #include <Geode/ui/ListView.hpp>
 #include <Geode/utils/ranges.hpp>
-#include <random>
+#include <jasmine/random.hpp>
 
 using namespace geode::prelude;
 
@@ -165,8 +165,7 @@ bool IDPackLayer::init() {
     menu->addChild(m_pageButton);
 
     m_randomButton = CCMenuItemExt::createSpriteExtraWithFilename("BI_randomBtn_001.png"_spr, 0.9f, [this](auto) {
-        static std::mt19937 mt(std::random_device{}());
-        page(std::uniform_int_distribution<int>(0, (m_fullSearchResults.size() - 1) / 10)(mt));
+        page(jasmine::random::getInt(0, (m_fullSearchResults.size() - 1) / 10));
     });
     m_randomButton->setPositionY(
         m_pageButton->getPositionY() - m_pageButton->getContentHeight() / 2.0f - m_randomButton->getContentHeight() / 2.0f - 5.0f);
